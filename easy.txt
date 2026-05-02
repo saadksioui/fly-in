@@ -1,0 +1,1093 @@
+[
+    {
+        "nbr_drones": 25,
+        "hubs": [
+            {
+                "prefix": "start_hub",
+                "name": "start",
+                "x": 0,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "gate_hell1",
+                "x": 1,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "gate_hell2",
+                "x": 2,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "gate_hell3",
+                "x": 3,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "gate_hell4",
+                "x": 4,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "gate_hell5",
+                "x": 5,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_trap_a1",
+                "x": 1,
+                "y": 1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_trap_a2",
+                "x": 2,
+                "y": 1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_trap_a3",
+                "x": 3,
+                "y": 1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_dead_a",
+                "x": 4,
+                "y": 1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_trap_b1",
+                "x": 1,
+                "y": -1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_trap_b2",
+                "x": 2,
+                "y": -1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_trap_b3",
+                "x": 3,
+                "y": -1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_dead_b",
+                "x": 4,
+                "y": -1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_loop1",
+                "x": 1,
+                "y": 2,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_loop2",
+                "x": 2,
+                "y": 2,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_loop3",
+                "x": 3,
+                "y": 2,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_loop4",
+                "x": 4,
+                "y": 2,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_loop5",
+                "x": 5,
+                "y": 2,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "maze_loop6",
+                "x": 5,
+                "y": 1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "micro_gate1",
+                "x": 6,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "micro_gate2",
+                "x": 7,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "micro_gate3",
+                "x": 8,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "overflow_hell1",
+                "x": 6,
+                "y": 1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "overflow_hell2",
+                "x": 7,
+                "y": 1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "overflow_hell3",
+                "x": 8,
+                "y": 1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "overflow_hell4",
+                "x": 6,
+                "y": -1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "overflow_hell5",
+                "x": 7,
+                "y": -1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "overflow_hell6",
+                "x": 8,
+                "y": -1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "false_hope1",
+                "x": 9,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "false_hope2",
+                "x": 10,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "false_hope3",
+                "x": 11,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "priority_trap1",
+                "x": 9,
+                "y": 1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "priority_trap2",
+                "x": 10,
+                "y": 1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "priority_dead",
+                "x": 11,
+                "y": 1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "priority_trap3",
+                "x": 9,
+                "y": -1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "priority_trap4",
+                "x": 10,
+                "y": -1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "priority_dead2",
+                "x": 11,
+                "y": -1,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "conv_restricted1",
+                "x": 12,
+                "y": 2,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "conv_restricted2",
+                "x": 13,
+                "y": 2,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "conv_restricted3",
+                "x": 14,
+                "y": 2,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "conv_restricted4",
+                "x": 12,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "conv_restricted5",
+                "x": 13,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "conv_restricted6",
+                "x": 14,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "conv_restricted7",
+                "x": 12,
+                "y": -2,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "conv_restricted8",
+                "x": 13,
+                "y": -2,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "conv_restricted9",
+                "x": 14,
+                "y": -2,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "final_merge",
+                "x": 15,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "final_torture1",
+                "x": 16,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "final_torture2",
+                "x": 17,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "final_torture3",
+                "x": 18,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "final_torture4",
+                "x": 19,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "hub",
+                "name": "final_torture5",
+                "x": 20,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            },
+            {
+                "prefix": "end_hub",
+                "name": "impossible_goal",
+                "x": 21,
+                "y": 0,
+                "metadata": {
+                    "zone": "restricted",
+                    "color": "rainbow",
+                    "max_drones": 25
+                }
+            }
+        ],
+        "connections": [
+            {
+                "con_from": "start",
+                "con_to": "start",
+                "metadata": {
+                    "max_link_capacity": "1"
+                }
+            },
+            {
+                "con_from": "gate_hell1",
+                "con_to": "gate_hell1",
+                "metadata": {
+                    "max_link_capacity": "1"
+                }
+            },
+            {
+                "con_from": "gate_hell2",
+                "con_to": "gate_hell2",
+                "metadata": {
+                    "max_link_capacity": "1"
+                }
+            },
+            {
+                "con_from": "gate_hell3",
+                "con_to": "gate_hell3",
+                "metadata": {
+                    "max_link_capacity": "1"
+                }
+            },
+            {
+                "con_from": "gate_hell4",
+                "con_to": "gate_hell4",
+                "metadata": {
+                    "max_link_capacity": "1"
+                }
+            },
+            {
+                "con_from": "gate_hell1",
+                "con_to": "gate_hell1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "gate_hell2",
+                "con_to": "gate_hell2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "gate_hell3",
+                "con_to": "gate_hell3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_trap_a1",
+                "con_to": "maze_trap_a1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_trap_a2",
+                "con_to": "maze_trap_a2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_trap_a3",
+                "con_to": "maze_trap_a3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_trap_b1",
+                "con_to": "maze_trap_b1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_trap_b2",
+                "con_to": "maze_trap_b2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_trap_b3",
+                "con_to": "maze_trap_b3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_loop1",
+                "con_to": "maze_loop1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_loop2",
+                "con_to": "maze_loop2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_loop3",
+                "con_to": "maze_loop3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_loop4",
+                "con_to": "maze_loop4",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_loop5",
+                "con_to": "maze_loop5",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_loop6",
+                "con_to": "maze_loop6",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_trap_a2",
+                "con_to": "maze_trap_a2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_trap_b2",
+                "con_to": "maze_trap_b2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "maze_loop3",
+                "con_to": "maze_loop3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "gate_hell5",
+                "con_to": "gate_hell5",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "micro_gate1",
+                "con_to": "micro_gate1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "micro_gate2",
+                "con_to": "micro_gate2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "micro_gate1",
+                "con_to": "micro_gate1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "micro_gate2",
+                "con_to": "micro_gate2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "micro_gate3",
+                "con_to": "micro_gate3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "micro_gate1",
+                "con_to": "micro_gate1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "micro_gate2",
+                "con_to": "micro_gate2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "micro_gate3",
+                "con_to": "micro_gate3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "overflow_hell1",
+                "con_to": "overflow_hell1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "overflow_hell2",
+                "con_to": "overflow_hell2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "overflow_hell4",
+                "con_to": "overflow_hell4",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "overflow_hell5",
+                "con_to": "overflow_hell5",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "overflow_hell3",
+                "con_to": "overflow_hell3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "overflow_hell6",
+                "con_to": "overflow_hell6",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "micro_gate3",
+                "con_to": "micro_gate3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "false_hope1",
+                "con_to": "false_hope1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "false_hope2",
+                "con_to": "false_hope2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "false_hope1",
+                "con_to": "false_hope1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "false_hope2",
+                "con_to": "false_hope2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "false_hope3",
+                "con_to": "false_hope3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "false_hope1",
+                "con_to": "false_hope1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "false_hope2",
+                "con_to": "false_hope2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "false_hope3",
+                "con_to": "false_hope3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "priority_trap1",
+                "con_to": "priority_trap1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "priority_trap3",
+                "con_to": "priority_trap3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "false_hope3",
+                "con_to": "false_hope3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "false_hope3",
+                "con_to": "false_hope3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "false_hope3",
+                "con_to": "false_hope3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "conv_restricted1",
+                "con_to": "conv_restricted1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "conv_restricted2",
+                "con_to": "conv_restricted2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "conv_restricted4",
+                "con_to": "conv_restricted4",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "conv_restricted5",
+                "con_to": "conv_restricted5",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "conv_restricted7",
+                "con_to": "conv_restricted7",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "conv_restricted8",
+                "con_to": "conv_restricted8",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "conv_restricted3",
+                "con_to": "conv_restricted3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "conv_restricted6",
+                "con_to": "conv_restricted6",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "conv_restricted9",
+                "con_to": "conv_restricted9",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "final_merge",
+                "con_to": "final_merge",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "final_torture1",
+                "con_to": "final_torture1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "final_torture2",
+                "con_to": "final_torture2",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "final_torture3",
+                "con_to": "final_torture3",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "final_torture4",
+                "con_to": "final_torture4",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "final_torture5",
+                "con_to": "final_torture5",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "overflow_hell1",
+                "con_to": "overflow_hell1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "overflow_hell4",
+                "con_to": "overflow_hell4",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            },
+            {
+                "con_from": "priority_trap1",
+                "con_to": "priority_trap1",
+                "metadata": {
+                    "max_link_capacity": 1
+                }
+            }
+        ]
+    }
+]
