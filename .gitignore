@@ -1,2 +1,4 @@
 edge_cases
 src/__pycache__
+.venv
+.vscode
