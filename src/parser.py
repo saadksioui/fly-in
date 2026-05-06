@@ -27,7 +27,7 @@ class Parser:
         self.pattern = r'\[.*?\]|\S+'
         self.metadata = {"zone": "normal", "color": None, "max_drones": 1}
         self.hub_names = []
-        self.data: List[Dict[str:Any]] = []
+        self.data: List[Dict[str, Any]] = []
 
     def get_hubs(self, line: str):
         parts = re.findall(self.pattern, line)

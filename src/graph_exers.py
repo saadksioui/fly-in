@@ -1,5 +1,6 @@
 from collections import deque
 import time
+from queue import PriorityQueue
 
 
 def get_time(function):
@@ -79,6 +80,28 @@ def component_count(graph):
     return count
 
 
+def dijkstra(graph, start):
+    distance = {v: float('inf') for v in graph.keys()}
+    previous = {v: None for v in graph.keys()}
+    visited = {v: False for v in graph.keys()}
+    distance[start] = 0
+    pq = PriorityQueue()
+    pq.put((start, distance[start]))
+    while not pq.empty():
+        vertex, weight = pq.get()
+        print(f"Vertex: {vertex}, Weight: {weight}")
+        visited[vertex] = True
+        for v, w in graph[vertex]:
+            if not visited[v]:
+                new_distance = w + weight
+                if new_distance < distance[v]:
+                    distance[v] = weight + w
+                    previous[v] = vertex
+                    pq.put((v, distance[v]))
+    return (distance, previous)
+
+
+
 if __name__ == "__main__":
     # graph = {
     #     'a': ['c', 'f', 'g'],
@@ -98,14 +121,23 @@ if __name__ == "__main__":
     # print(f"DFS: {dfspath(graph, 'a', 'e')}")
     # print(f"BFS: {bfspath(graph, 'a', 'e')}")
     graph = {
-        1: [2],
-        2: [1],
-        3: [],
-        4: [6],
-        5: [6],
-        6: [4, 5, 7, 8],
-        7: [6],
-        8: [6]
-    }
-    result = component_count(graph)
-    print(result)
+        'A': [('B', 3), ('C', 6), ('D', 4)],
+        'B': [('A', 3), ('C', 2), ('E', 3)],
+        'C': [('A', 6), ('B', 2), ('E', 3), ('F', 3)],
+        'D': [('A', 4), ('F', 6)],
+        'E': [('B', 3), ('C', 3), ('F', 1)],
+        'F': [('D', 6), ('C', 3), ('E', 1)]
+        }
+    print(dijkstra(graph, 'A'))
+#    graph = {
+#        1: [2],
+#        2: [1],
+#        3: [],
+#        4: [6],
+#        5: [6],
+#        6: [4, 5, 7, 8],
+#        7: [6],
+#        8: [6]
+#    }
+#result = component_count(graph)
+#print(result)
