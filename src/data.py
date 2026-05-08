@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List
 
@@ -19,8 +19,8 @@ class PrefixType(Enum):
 
 @dataclass
 class Metadata:
-    zone: ZoneType = ZoneType.Normal.value
-    color: str = None
+    zone: ZoneType = ZoneType.Normal
+    color: str = "None"
     max_drones: int = 1
 
 
@@ -29,14 +29,15 @@ class Connection:
     zone_a: Zone
     zone_b: Zone
     max_link_capacity: int
+    drones_in_transit: List[Drone] = field(default_factory=list)
 
 
 @dataclass
 class Drone:
     id: str
     current_location: Zone | Connection
-    route: List[Zone]
-    has_moved: bool
+    route: List[Zone] = field(default_factory=list)
+    has_moved: bool = False
 
 
 @dataclass
@@ -46,14 +47,14 @@ class Zone:
     x: int
     y: int
     metadata: Metadata
-    current_drones: List[Drone]
-    connections: Dict[str, Connection]
+    current_drones: List[Drone] = field(default_factory=list)
+    connections: Dict[str, Connection] = field(default_factory=dict)
 
 
 @dataclass
 class Graph:
-    zones: Dict[str, Zone]
-    connections: List[Connection]
-    drones: List[Drone]
-    start_hub: Zone
-    end_hub: Zone
+    zones: Dict[str, Zone] = field(default_factory=dict)
+    connections: List[Connection] = field(default_factory=list)
+    drones: List[Drone] = field(default_factory=list)
+    start_hub: Zone | None = None
+    end_hub: Zone | None = None

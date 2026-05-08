@@ -1,6 +1,5 @@
-import os
 import re
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Any
 from src.custom_exception import (
     HubException,
     ConnectionException,
@@ -9,21 +8,8 @@ from src.custom_exception import (
 
 
 class Parser:
-    def __init__(self, level: str, path: Optional[str] = None):
-        self.level = level
-        if level == "custom":
-            self.path = path
-            self.files: List[str] = [
-                f"{path}/{f}"
-                for f in os.listdir(f"{path}")
-                if os.path.isfile(f"{path}/{f}")
-            ]
-        else:
-            self.files: List[str] = [
-                f"maps/{level}/{f}"
-                for f in os.listdir(f"maps/{level}")
-                if os.path.isfile(f"maps/{level}/{f}")
-            ]
+    def __init__(self, path: str):
+        self.path = path
         self.pattern = r'\[.*?\]|\S+'
         self.metadata = {"zone": "normal", "color": None, "max_drones": 1}
         self.hub_names = []
@@ -143,8 +129,7 @@ class Parser:
         return info
 
     def parser(self):
-        for file in reversed(self.files):
-            with open(file) as f:
-                data = f.read()
-            self.data.append(self.get_data(data))
+        with open(self.path) as f:
+            data = f.read()
+        self.data.append(self.get_data(data))
         return self.data
