@@ -41,6 +41,8 @@ class Drone:
 
 @dataclass
 class Graph:
+    start_hub: Zone | None
+    end_hub: Zone | None
     elements: Dict[Zone, List[tuple[Zone, float]]] = field(default_factory=dict)
 
     def add_zone(self, zone: Zone):

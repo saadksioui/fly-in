@@ -28,6 +28,10 @@ if __name__ == "__main__":
             metadata_obj = Metadata(zone["metadata"]["zone"], zone["metadata"]["color"], zone["metadata"]["max_drones"]) 
             zone_obj = Zone(zone["prefix"], zone["name"], zone["x"], zone["y"], metadata_obj)
             zones[zone["name"]] = zone_obj
+    
+    if start_hub is None:
+        print("Error: Start zone not found")
+        exit(1)
 
     for connection in parsed_data["connections"]:
         zone_a = zones[connection["con_from"]]
@@ -40,11 +44,11 @@ if __name__ == "__main__":
         drone = Drone(f"D{i}", start_hub)
         drones.append(drone)
 
-    graph = Graph()
+    graph = Graph(start_hub, end_hub)
     
     for con in connections:
         graph.add_connection(con)
-    sim = Simulation(graph, parsed_data["nbr_drones"])
-    sim.find_path()
-    #sim.run_simulation()
+    sim = Simulation(graph, drones, parsed_data["nbr_drones"])
+    sim.calculate_routes(start_hub)
+    sim.run_simulation()
 
