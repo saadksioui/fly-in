@@ -128,7 +128,8 @@ if __name__ == "__main__":
         'E': [('B', 3), ('C', 3), ('F', 1)],
         'F': [('D', 6), ('C', 3), ('E', 1)]
         }
-    print(dijkstra(graph, 'A'))
+    distances, paths = dijkstra(graph, 'A')
+    print("Shortest distances from A:", distances)
 #    graph = {
 #        1: [2],
 #        2: [1],

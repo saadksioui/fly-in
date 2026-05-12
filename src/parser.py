@@ -11,13 +11,12 @@ class Parser:
     def __init__(self, path: str):
         self.path = path
         self.pattern = r'\[.*?\]|\S+'
-        self.metadata = {"zone": "normal", "color": None, "max_drones": 1}
         self.hub_names = []
         self.data: List[Dict[str, Any]] = []
 
     def get_hubs(self, line: str):
         parts = re.findall(self.pattern, line)
-        metadata = self.metadata
+        metadata = {"zone": "normal", "color": None, "max_drones": 1}
         if len(parts) != 4 and len(parts) != 5:
             raise HubException(
                 "Zone declarations should be like this: "
@@ -44,14 +43,17 @@ class Parser:
             metadata_part = metadata_part.replace('[', '')
             metadata_part = metadata_part.replace(']', '')
             for data in metadata_part.split(' '):
-                data_parts = data.split('=')
-                if data_parts[0] not in ['zone', 'color', 'max_drones']:
-                    raise HubException("The args in metadata should only be: "
-                                       "'zone', 'color' or 'max_drones'")
-                if data_parts[0] == 'max_drones':
-                    metadata.update({'max_drones': int(data_parts[1])})
+                if '=' not in data:
+                    continue
+                key, value = data.split('=', 1)
+    
+                if key not in ['zone', 'color', 'max_drones']:
+                    raise HubException(f"Invalid metadata key: {key}")
+        
+                if key == 'max_drones':
+                    metadata['max_drones'] = int(value)
                 else:
-                    metadata.update({data_parts[0]: data_parts[1]})
+                    metadata[key] = value
 
         hub = {
             "prefix": prefix,
@@ -94,7 +96,7 @@ class Parser:
                 metadata.update({data_parts[0]: data_parts[1]})
         connection = {
             'con_from': con_from,
-            'con_to': con_from,
+            'con_to': con_to,
             'metadata': metadata
         }
         return connection

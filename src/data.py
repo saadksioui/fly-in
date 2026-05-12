@@ -1,60 +1,55 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Literal, Optional
+
+ZTypes = Literal["normal", "blocked", "restricted", "priority"]
+zone_value = {
+        "normal": 1.0,
+        "blocked": float("inf"),
+        "restricted": 2.0,
+        "priority": 0.9
+        }
 
 
-class ZoneType(Enum):
-    Normal = "normal"
-    Blocked = "blocked"
-    Restricted = "restricted"
-    Priority = "priority"
-
-
-class PrefixType(Enum):
-    StartHub = "start_hub"
-    EndHub = "end_hub"
-    Hub = "hub"
-
-
-@dataclass
+@dataclass(frozen=True)
 class Metadata:
-    zone: ZoneType = ZoneType.Normal
-    color: str = "None"
+    zone_type: ZTypes = "normal"
+    color: Optional[str] = None
     max_drones: int = 1
 
+@dataclass(frozen=True)
+class Zone:
+    prefix: str
+    name: str
+    x: int
+    y: int
+    metadata: Metadata
 
 @dataclass
 class Connection:
     zone_a: Zone
     zone_b: Zone
-    max_link_capacity: int
-    drones_in_transit: List[Drone] = field(default_factory=list)
-
+    metadata: int = 1
 
 @dataclass
 class Drone:
     id: str
-    current_location: Zone | Connection
-    route: List[Zone] = field(default_factory=list)
-    has_moved: bool = False
-
-
-@dataclass
-class Zone:
-    prefix: PrefixType
-    name: str
-    x: int
-    y: int
-    metadata: Metadata
-    current_drones: List[Drone] = field(default_factory=list)
-    connections: Dict[str, Connection] = field(default_factory=dict)
-
+    current_zone: Zone | None
+    path: List[Zone] = field(default_factory=list)
+    done: bool = False
+    turns: int = 0
 
 @dataclass
 class Graph:
-    zones: Dict[str, Zone] = field(default_factory=dict)
-    connections: List[Connection] = field(default_factory=list)
-    drones: List[Drone] = field(default_factory=list)
-    start_hub: Zone | None = None
-    end_hub: Zone | None = None
+    elements: Dict[Zone, List[tuple[Zone, float]]] = field(default_factory=dict)
+
+    def add_zone(self, zone: Zone):
+        if zone not in self.elements:
+            self.elements[zone] = []
+
+    def add_connection(self, connection: Connection):
+        self.add_zone(connection.zone_a)
+        self.add_zone(connection.zone_b)
+        self.elements[connection.zone_a].append((connection.zone_b, zone_value[connection.zone_b.metadata.zone_type]))
+        self.elements[connection.zone_b].append((connection.zone_a, zone_value[connection.zone_a.metadata.zone_type]))
+
