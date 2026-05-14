@@ -64,7 +64,7 @@ class Parser:
         }
         return hub
 
-    def get_connections(self, line: str, index: int):
+    def get_connections(self, line: str):
         parts = re.findall(self.pattern, line)
         if len(parts) not in [2, 3]:
             raise ConnectionException(
@@ -74,7 +74,6 @@ class Parser:
         metadata = {
             'max_link_capacity': 1
         }
-        con_name = f"connection-{index}"
         con_from = parts[1].split('-')[0]
         con_to = parts[1].split('-')[1]
         if con_from not in self.hub_names:
@@ -96,7 +95,7 @@ class Parser:
                                        "'max_link_capacity'")
                 metadata.update({data_parts[0]: data_parts[1]})
         connection = {
-            'name': con_name,
+            'name': f"{con_from}-{con_to}",
             'con_from': con_from,
             'con_to': con_to,
             'metadata': metadata
@@ -128,8 +127,8 @@ class Parser:
             raise ParsingException('')
         for hub in hubs:
             info['hubs'].append(self.get_hubs(hub))
-        for i, conn in enumerate(connections):
-            info['connections'].append(self.get_connections(conn, i))
+        for conn in connections:
+            info['connections'].append(self.get_connections(conn))
         return info
 
     def parser(self):

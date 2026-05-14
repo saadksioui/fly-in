@@ -4,6 +4,7 @@ from src.data import Zone, Metadata, Connection, Graph, Drone
 from src.simulation import Simulation
 import sys
 
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("This how to run the program: python3 -m src <map path>")
@@ -58,4 +59,3 @@ if __name__ == "__main__":
     sim = Simulation(graph, drones, parsed_data["nbr_drones"], loc_drones)
     sim.calculate_routes(start_hub)
     sim.run_simulation()
-

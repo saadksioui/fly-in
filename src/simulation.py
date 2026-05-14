@@ -1,5 +1,5 @@
 from typing import Any, Dict, List
-from src.data import Graph, Drone, Zone
+from src.data import Connection, Graph, Drone, Zone
 import heapq
 
 class Simulation:
@@ -54,55 +54,66 @@ class Simulation:
 
     def calculate_routes(self, start: Zone):
         penalties = {zone.name: 0.0 for zone in self.graph.elements.keys()}
-        for drone in self.drones:
+        for i, drone in enumerate(self.drones):
             path = self.find_path(start, penalties)
             drone.path = path
             for pa in path:
                 if pa.name == "start" or pa.name == "goal":
                     continue
                 penalties[pa.name] += (2.0 / pa.metadata.max_drones)
+            if i % 3 == 0:
+                for zone_name in penalties:
+                    penalties[zone_name] = max(0.0, penalties[zone_name] - 0.5)
                       
     def run_simulation(self):
-        rest_move = False
+        half_move = []
         while self.drones_delivered < self.total_drones:
-            moves = []
             self.turns += 1
+            logs = []
+            for drone, connection, next_zone in half_move:
+                index = self.loc_drones[connection.name].index(drone)
+                self.loc_drones[connection.name].pop(index)
+                drone.current_location = next_zone
+                self.loc_drones[next_zone.name].append(drone)
+                drone.path.pop(1)
+                logs.append(f"{drone.id}-{next_zone.name}")
+                if next_zone.prefix == "end_hub":
+                    self.drones_delivered += 1
+                    drone.done = 1
+            half_move.clear()
             can_move = []
-            half_move = []
             for drone in self.drones:
                 if drone.done:
                     continue
-                #self._print_path(drone.path)
                 next_des = drone.path[1]
-                if len(self.loc_drones[next_des.name]) == next_des.metadata.max_drones:
-                    continue
-                can_move.append((drone, next_des))
-                cur_loc = drone.current_location
-                if len(self.loc_drones[cur_loc.name]) > 0:
-                    if drone in self.loc_drones[cur_loc.name]:
-                        index = self.loc_drones[cur_loc.name].index(drone)
-                        self.loc_drones[cur_loc.name].pop(index)
-                drone.path.pop(1)
-                #self._print_path(drone.path)
-
-            for drone, zone in can_move:
-                conn = [con[1].name for con in self.graph.elements[zone]
-                        if con[1].zone_b.name == zone.name]
-                if zone.metadata.zone_type == "restricted":
-                    half_move.append((drone, zone))
-                    moves.append(f"{drone.id}-{conn[0]}")
-                else:
-                    if zone.prefix == "end_hub":
-                        self.drones_delivered += 1
-                        drone.done = 1
-                    self.loc_drones[zone.name].append(drone)
-                    drone.current_location = zone
-                    moves.append(f"{drone.id}-{zone.name}")
+                old_des = drone.current_location
+                d_index = self.loc_drones[old_des.name].index(drone)
+                self.loc_drones[old_des.name].pop(d_index)
+                can_move.append((old_des, drone, next_des))
             
-            for drone, zone in half_move:
-                self.loc_drones[zone.name].append(drone)
-                moves.append(f"{drone.id}-{zone.name}")
-                self.turns += 1
-            rest_move = not rest_move
-            print(" ".join(moves))
-        print(f"The number of turns is: {self.turns}")
+            for old, drone, next in can_move:
+                if (len(self.loc_drones[next.name]) == next.metadata.max_drones
+                    and next.prefix != "end_hub"):
+                    self.loc_drones[old.name].append(drone)
+                else:
+                    if next.metadata.zone_type == "restricted":
+                        connection: Connection | None = None
+                        for zone, conn in self.graph.elements.get(old, []):
+                            if zone == next:
+                                connection = conn
+                                break
+                        self.loc_drones[connection.name].append(drone)
+                        drone.current_location = connection
+                        half_move.append((drone, connection, next))
+                        logs.append(f"{drone.id}-{connection.name}")
+                    else:
+                        drone.current_location = next
+                        self.loc_drones[next.name].append(drone)
+                        drone.path.pop(1)
+                        logs.append(f"{drone.id}-{next.name}")
+                        if next.prefix == "end_hub":
+                            drone.done = 1
+                            self.drones_delivered += 1
+            self.logs.append(" ".join(logs))
+            print(" ".join(logs))
+        print(f"Total turns: {self.turns}")
