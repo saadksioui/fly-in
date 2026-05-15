@@ -3,6 +3,7 @@ from src.parser import Parser
 from src.data import Zone, Metadata, Connection, Graph, Drone
 from src.simulation import Simulation
 import sys
+from src.ol import Visualizer
 
 
 if __name__ == "__main__":
@@ -43,7 +44,7 @@ if __name__ == "__main__":
         name = connection["name"]
         zone_a = zones[connection["con_from"]]
         zone_b = zones[connection["con_to"]]
-        capacity = connection["metadata"]["max_link_capacity"]
+        capacity = int(connection["metadata"]["max_link_capacity"])
         conn = Connection(name=name, zone_a=zone_a, zone_b=zone_b, metadata=capacity)        
         connections.append(conn)
         loc_drones[conn.name] = []
@@ -59,3 +60,5 @@ if __name__ == "__main__":
     sim = Simulation(graph, drones, parsed_data["nbr_drones"], loc_drones)
     sim.calculate_routes(start_hub)
     sim.run_simulation()
+    vi = Visualizer(graph, sim.logs, sim.total_drones)
+    vi.run()

@@ -39,7 +39,7 @@ class Drone:
     current_location: Zone | Connection
     path: List[Zone] = field(default_factory=list)
     done: bool = False
-    turns: int = 0
+    has_turn: bool = False
 
 @dataclass
 class Graph:
