@@ -1,0 +1,1444 @@
+diff --git a/pyproject.toml b/pyproject.toml
+index b79464b..8180e21 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -5,5 +5,6 @@ description = "Add your description here"
+ readme = "README.md"
+ requires-python = ">=3.10"
+ dependencies = [
+-    "pygame >= 2.6.1"
++    "pygame >= 2.6.1",
++    "coloraide >= 8.8.1"
+ ]
+diff --git a/src/__main__.py b/src/__main__.py
+index aee7adf..f48daf4 100644
+--- a/src/__main__.py
++++ b/src/__main__.py
+@@ -1,64 +1,92 @@
+-from os import name
++from src.custom_exception import (
++    ConnectionException,
++    HubException,
++    ParsingException
++)
+ from src.parser import Parser
+ from src.data import Zone, Metadata, Connection, Graph, Drone
+ from src.simulation import Simulation
+-import sys
+ from src.ol import Visualizer
++import sys
+ 
+ 
+ if __name__ == "__main__":
+     if len(sys.argv) != 2:
+         print("This how to run the program: python3 -m src <map path>")
+         exit(1)
+-    pars = Parser(sys.argv[1])
+-    data = pars.parser()
+-    parsed_data = data[0]
+-    drones = []
+-    zones = {}
+-    connections = []
+-    start_hub = None
+-    end_hub = None
+-    loc_drones = {}
+-    for zone in parsed_data["hubs"]:
+-        if zone["prefix"] == "start_hub":
+-            start_metadata = Metadata(zone["metadata"]["zone"], zone["metadata"]["color"], zone["metadata"]["max_drones"])
+-            start_hub = Zone(zone["prefix"], zone["name"], zone["x"], zone["y"], start_metadata)
+-            zones[zone["name"]] = start_hub
+-            loc_drones[start_hub.name] = []
+-        elif zone["prefix"] == "end_hub":
+-            end_metadata = Metadata(zone["metadata"]["zone"], zone["metadata"]["color"], zone["metadata"]["max_drones"])
+-            end_hub = Zone(zone["prefix"], zone["name"], zone["x"], zone["y"], end_metadata)
+-            zones[zone["name"]] = end_hub
+-            loc_drones[end_hub.name] = []
+-        else:
+-            metadata_obj = Metadata(zone["metadata"]["zone"], zone["metadata"]["color"], zone["metadata"]["max_drones"]) 
+-            zone_obj = Zone(zone["prefix"], zone["name"], zone["x"], zone["y"], metadata_obj)
+-            zones[zone["name"]] = zone_obj
+-            loc_drones[zone_obj.name] = []
+-    
+-    if start_hub is None:
+-        print("Error: Start zone not found")
+-        exit(1)
++    try:
++        pars = Parser(sys.argv[1])
++        parsed_data = pars.parser()
++        print(parsed_data)
++        start_hub = None
++        end_hub = None
++        zones = {}
++        connections = []
++        drones = []
++        loc_drones = {}
++        for zone in parsed_data["hubs"]:
++            if zone["prefix"] == "start_hub":
++                start_metadata = Metadata(zone["metadata"]["zone"],
++                                          zone["metadata"]["color"],
++                                          zone["metadata"]["max_drones"])
++                start_hub = Zone(zone["prefix"], zone["name"], zone["x"],
++                                 zone["y"], start_metadata)
++                zones[zone["name"]] = start_hub
++                loc_drones[start_hub.name] = []
++            elif zone["prefix"] == "end_hub":
++                end_metadata = Metadata(zone["metadata"]["zone"],
++                                        zone["metadata"]["color"],
++                                        zone["metadata"]["max_drones"])
++                end_hub = Zone(zone["prefix"], zone["name"], zone["x"],
++                               zone["y"], end_metadata)
++                zones[zone["name"]] = end_hub
++                loc_drones[end_hub.name] = []
++            else:
++                metadata_obj = Metadata(zone["metadata"]["zone"],
++                                        zone["metadata"]["color"],
++                                        zone["metadata"]["max_drones"])
++                zone_obj = Zone(zone["prefix"], zone["name"], zone["x"],
++                                zone["y"], metadata_obj)
++                zones[zone["name"]] = zone_obj
++                loc_drones[zone_obj.name] = []
++
++        if start_hub is None:
++            print("Error: Start zone not found")
++            exit(1)
++
++        for connection in parsed_data["connections"]:
++            name = connection["name"]
++            zone_a = zones[connection["from"]]
++            zone_b = zones[connection["to"]]
++            capacity = int(connection["metadata"]["max_link_capacity"])
++            conn = Connection(name=name, zone_a=zone_a, zone_b=zone_b,
++                              metadata=capacity)
++            connections.append(conn)
++            loc_drones[conn.name] = []
++        for i in range(1, parsed_data["nb_drones"] + 1):
++            drone = Drone(f"D{i}", start_hub)
++            drones.append(drone)
++            loc_drones[start_hub.name].append(drone)
+ 
+-    for connection in parsed_data["connections"]:
+-        name = connection["name"]
+-        zone_a = zones[connection["con_from"]]
+-        zone_b = zones[connection["con_to"]]
+-        capacity = int(connection["metadata"]["max_link_capacity"])
+-        conn = Connection(name=name, zone_a=zone_a, zone_b=zone_b, metadata=capacity)        
+-        connections.append(conn)
+-        loc_drones[conn.name] = []
+-    for i in range(1, parsed_data["nbr_drones"] + 1):
+-        drone = Drone(f"D{i}", start_hub)
+-        drones.append(drone)
+-        loc_drones[start_hub.name].append(drone)
++        graph = Graph(start_hub, end_hub)
+ 
+-    graph = Graph(start_hub, end_hub)
+-    
+-    for con in connections:
+-        graph.add_connection(con)
+-    sim = Simulation(graph, drones, parsed_data["nbr_drones"], loc_drones)
+-    sim.calculate_routes(start_hub)
+-    sim.run_simulation()
+-    vi = Visualizer(graph, sim.logs, sim.total_drones)
+-    vi.run()
++        for con in connections:
++            graph.add_connection(con)
++        sim = Simulation(graph, drones, parsed_data["nb_drones"], loc_drones)
++        sim.calculate_routes(start_hub)
++        sim.run_simulation()
++        vi = Visualizer(graph, sim.logs, sim.total_drones)
++        vi.run()
++
++    except FileNotFoundError as e:
++        print(e)
++        exit(1)
++    except PermissionError as e:
++        print(e)
++        exit(1)
++    except (ParsingException, HubException, ConnectionException) as e:
++        print(e)
++        exit(1)
++    except ValueError as e:
++        print(e)
++        exit(1)
+diff --git a/src/data.py b/src/data.py
+index 4431512..5d3f1cb 100644
+--- a/src/data.py
++++ b/src/data.py
+@@ -17,6 +17,7 @@ class Metadata:
+     color: Optional[str] = None
+     max_drones: int = 1
+ 
++
+ @dataclass(frozen=True)
+ class Zone:
+     prefix: str
+@@ -26,6 +27,7 @@ class Zone:
+     metadata: Metadata
+     capacity: int = 0
+ 
++
+ @dataclass
+ class Connection:
+     name: str
+@@ -33,6 +35,7 @@ class Connection:
+     zone_b: Zone
+     metadata: int = 1
+ 
++
+ @dataclass
+ class Drone:
+     id: str
+@@ -41,11 +44,13 @@ class Drone:
+     done: bool = False
+     has_turn: bool = False
+ 
++
+ @dataclass
+ class Graph:
+     start_hub: Zone | None
+     end_hub: Zone | None
+-    elements: Dict[Zone, List[tuple[Zone, Connection]]] = field(default_factory=dict)
++    elements: Dict[Zone,
++                   List[tuple[Zone, Connection]]] = field(default_factory=dict)
+ 
+     def add_zone(self, zone: Zone):
+         if zone not in self.elements:
+@@ -54,6 +59,9 @@ class Graph:
+     def add_connection(self, connection: Connection):
+         self.add_zone(connection.zone_a)
+         self.add_zone(connection.zone_b)
+-        self.elements[connection.zone_a].append((connection.zone_b, connection))
+-        self.elements[connection.zone_b].append((connection.zone_a, connection))
+-
++        self.elements[connection.zone_a].append(
++            (connection.zone_b, connection)
++            )
++        self.elements[connection.zone_b].append(
++            (connection.zone_a, connection)
++            )
+diff --git a/src/ol.py b/src/ol.py
+index 3fa78d6..a21fc22 100644
+--- a/src/ol.py
++++ b/src/ol.py
+@@ -1,197 +1,488 @@
++import math
++from copy import deepcopy
++from typing import Dict, List, Tuple
++
+ import pygame
+-import random
+-from typing import List, Dict
+ from src.data import Graph
+ 
+-# --- Colors ---
++
+ COLORS = {
+-    "background": (30, 30, 30),
+-    "text": (255, 255, 255),
+-    "line": (100, 100, 100),
+-    "drone": (0, 255, 255),  # Cyan drones
+-    "normal": (200, 200, 200),
+-    "restricted": (255, 100, 100),
+-    "priority": (255, 215, 0),
+-    "blocked": (50, 50, 50),
+-    "start_hub": (0, 255, 0),
+-    "end_hub": (255, 0, 255)
++    "background": (14, 18, 28),
++    "panel": (28, 34, 48),
++    "panel_border": (210, 210, 220),
++    "text": (245, 245, 245),
++    "muted": (180, 185, 195),
++    "line": (130, 140, 160),
++    "line_text": (220, 220, 230),
++    "drone": (0, 235, 255),
++    "drone_text": (10, 18, 22),
++    "normal": (190, 195, 210),
++    "restricted": (235, 120, 120),
++    "priority": (255, 215, 70),
++    "blocked": (90, 90, 90),
++    "start_hub": (0, 210, 90),
++    "end_hub": (215, 95, 255),
++    "outline": (10, 10, 10),
++    "timeline": (50, 60, 80),
++    "timeline_fill": (0, 235, 255),
++    "timeline_knob": (255, 255, 255),
+ }
+ 
++
+ class Visualizer:
+-    def __init__(self, graph: Graph, logs: List[str], total_drones: int):
++    def __init__(self, graph: Graph, logs: List[str], total_drones: int) -> None:
+         pygame.init()
+-        self.width, self.height = 1200, 800
+-        self.screen = pygame.display.set_mode((self.width, self.height))
+-        pygame.display.set_caption("Fly-in Drone Simulation")
++
++        self.width = 1500
++        self.height = 920
++        self.screen = pygame.display.set_mode(
++            (self.width, self.height), pygame.RESIZABLE
++        )
++        pygame.display.set_caption("Fly-in Visualizer")
+         self.clock = pygame.time.Clock()
+-        self.font = pygame.font.SysFont("Arial", 14)
+-        self.large_font = pygame.font.SysFont("Arial", 24, bold=True)
++
++        self.font = pygame.font.SysFont("Arial", 16)
++        self.small_font = pygame.font.SysFont("Arial", 13)
++        self.big_font = pygame.font.SysFont("Arial", 28, bold=True)
+ 
+         self.graph = graph
+         self.logs = logs
+-        self.total_turns = len(logs)
+-        self.current_turn = 0
+-        
+-        # Animation state
+-        self.animating = False
+-        self.progress = 0.0
+-        self.anim_speed = 0.05  # 0.05 = 20 frames per turn
++        self.total_drones = total_drones
++
++        self.zone_by_name = {z.name: z for z in self.graph.elements.keys()}
++        self.connection_by_name = self._collect_connections()
++
++        self.snapshots = self._build_snapshots()
++        self.turn_index = 0
++
+         self.auto_play = False
++        self.delay_ms = 700
++        self.last_tick = 0
++        self.running = True
+ 
+-        # Calculate map scaling
+-        self._calculate_scale()
++        self.top_ui_h = 135
++        self.bottom_ui_h = 55
++        self.side_pad = 50
++        self.graph_pad = 80
+ 
+-        # Drone State Tracking
+-        # All drones start at the start_hub
+-        start_name = self.graph.start_hub.name
+-        self.drone_positions = {f"D{i}": start_name for i in range(1, total_drones + 1)}
+-        self.drone_targets = self.drone_positions.copy()
+-        
+-        # Give each drone a tiny random offset so they don't perfectly overlap
+-        self.drone_offsets = {f"D{i}": (random.randint(-8, 8), random.randint(-8, 8)) for i in range(1, total_drones + 1)}
++        self.base_zone_radius = 26
++        self.min_scale = 35
++        self.max_scale = 160
+ 
+-    def _calculate_scale(self):
+-        """Finds the min/max coordinates to center and scale the graph on screen."""
+-        xs = [z.x for z in self.graph.elements.keys()]
+-        ys = [z.y for z in self.graph.elements.keys()]
+-        
+-        min_x, max_x = min(xs), max(xs)
+-        min_y, max_y = min(ys), max(ys)
+-        
+-        grid_width = max(1, max_x - min_x)
+-        grid_height = max(1, max_y - min_y)
+-        
+-        padding = 100
+-        scale_x = (self.width - padding * 2) / grid_width
+-        scale_y = (self.height - padding * 2) / grid_height
+-        
+-        self.scale = min(scale_x, scale_y)
+-        self.offset_x = padding - (min_x * self.scale)
+-        self.offset_y = padding - (min_y * self.scale)
+-
+-    def _get_coords(self, location_name: str) -> pygame.math.Vector2:
+-        """Returns the screen (X, Y) for a zone or the midpoint of a connection."""
+-        # Is it a zone?
+-        for zone in self.graph.elements.keys():
+-            if zone.name == location_name:
+-                x = zone.x * self.scale + self.offset_x
+-                y = zone.y * self.scale + self.offset_y
+-                return pygame.math.Vector2(x, y)
+-        
+-        # Is it a connection? (For restricted zones)
++        self.zoom = 1.0
++        self.camera_x = 0.0
++        self.camera_y = 0.0
++
++        self._recompute_layout()
++
++    # ---------- data prep ----------
++
++    def _collect_connections(self) -> Dict[str, object]:
++        out: Dict[str, object] = {}
+         for zone, connections in self.graph.elements.items():
+             for neighbor, conn in connections:
+-                if conn.name == location_name:
+-                    x1 = conn.zone_a.x * self.scale + self.offset_x
+-                    y1 = conn.zone_a.y * self.scale + self.offset_y
+-                    x2 = conn.zone_b.x * self.scale + self.offset_x
+-                    y2 = conn.zone_b.y * self.scale + self.offset_y
+-                    # Return the exact midpoint of the line
+-                    return pygame.math.Vector2((x1 + x2) / 2, (y1 + y2) / 2)
+-        
+-        return pygame.math.Vector2(0, 0) # Fallback
+-
+-    def _advance_turn(self):
+-        """Reads the next line of the log and sets up the targets for animation."""
+-        if self.current_turn >= self.total_turns:
+-            self.auto_play = False
+-            return
+-
+-        # Current targets become the new starting positions
+-        self.drone_positions = self.drone_targets.copy()
+-        
+-        # Parse the log line: "D1-roof1 D2-connection-5"
+-        log_line = self.logs[self.current_turn]
+-        if log_line.strip():
+-            moves = log_line.split(" ")
++                out[conn.name] = conn
++        return out
++
++    def _build_snapshots(self) -> List[Dict[str, str]]:
++        state = {
++            f"D{i}": self.graph.start_hub.name
++            for i in range(1, self.total_drones + 1)
++        }
++        snapshots = [deepcopy(state)]
++
++        for raw in self.logs:
++            new_state = deepcopy(snapshots[-1])
++            moves = raw if isinstance(raw, list) else str(raw).split()
+             for move in moves:
+                 drone_id, destination = move.split("-", 1)
+-                self.drone_targets[drone_id] = destination
++                new_state[drone_id] = destination
++            snapshots.append(new_state)
++
++        return snapshots
++
++    # ---------- layout ----------
++
++    def _graph_rect(self) -> pygame.Rect:
++        return pygame.Rect(
++            self.side_pad,
++            self.top_ui_h + 10,
++            self.width - self.side_pad * 2,
++            self.height - self.top_ui_h - self.bottom_ui_h - 25,
++        )
++
++    def _recompute_layout(self) -> None:
++        xs = [z.x for z in self.graph.elements.keys()]
++        ys = [z.y for z in self.graph.elements.keys()]
++
++        self.min_world_x = min(xs)
++        self.max_world_x = max(xs)
++        self.min_world_y = min(ys)
++        self.max_world_y = max(ys)
++
++        world_w = max(1, self.max_world_x - self.min_world_x)
++        world_h = max(1, self.max_world_y - self.min_world_y)
++
++        rect = self._graph_rect()
++        usable_w = max(200, rect.width - 2 * self.graph_pad)
++        usable_h = max(200, rect.height - 2 * self.graph_pad)
++
++        fit_scale = min(usable_w / world_w, usable_h / world_h)
++        self.base_scale = max(self.min_scale, min(self.max_scale, fit_scale))
++
++        center_world_x = (self.min_world_x + self.max_world_x) / 2
++        center_world_y = (self.min_world_y + self.max_world_y) / 2
++
++        self.center_world_x = center_world_x
++        self.center_world_y = center_world_y
++
++        self._clamp_camera()
++
++    def _clamp_camera(self) -> None:
++        # keep panning bounded so the map cannot be fully lost
++        rect = self._graph_rect()
++        pad = 200
++        max_dx = rect.width * 0.35 + pad
++        max_dy = rect.height * 0.35 + pad
++        self.camera_x = max(-max_dx, min(max_dx, self.camera_x))
++        self.camera_y = max(-max_dy, min(max_dy, self.camera_y))
++
++    def _current_scale(self) -> float:
++        return self.base_scale * self.zoom
++
++    def _world_to_screen(self, x: float, y: float) -> pygame.Vector2:
++        rect = self._graph_rect()
++        scale = self._current_scale()
++
++        sx = rect.centerx + (x - self.center_world_x) * scale + self.camera_x
++        sy = rect.centery + (y - self.center_world_y) * scale + self.camera_y
++        return pygame.Vector2(sx, sy)
++
++    def _get_coords(self, location_name: str) -> pygame.Vector2:
++        if location_name in self.zone_by_name:
++            zone = self.zone_by_name[location_name]
++            return self._world_to_screen(zone.x, zone.y)
++
++        if location_name in self.connection_by_name:
++            conn = self.connection_by_name[location_name]
++            a = self._world_to_screen(conn.zone_a.x, conn.zone_a.y)
++            b = self._world_to_screen(conn.zone_b.x, conn.zone_b.y)
++            return (a + b) / 2
++
++        return pygame.Vector2(0, 0)
++
++    def _zone_radius(self) -> int:
++        return max(18, min(34, int(self.base_zone_radius * self.zoom)))
++
++    # ---------- playback ----------
++
++    def _next_turn(self) -> None:
++        self.turn_index = min(self.turn_index + 1, len(self.snapshots) - 1)
++
++    def _previous_turn(self) -> None:
++        self.turn_index = max(self.turn_index - 1, 0)
++
++    def _restart(self) -> None:
++        self.turn_index = 0
++        self.auto_play = False
++
++    # ---------- styling ----------
++
++    def _zone_color(self, zone) -> Tuple[int, int, int]:
++        if zone.prefix == "start_hub":
++            return COLORS["start_hub"]
++        if zone.prefix == "end_hub":
++            return COLORS["end_hub"]
++        return COLORS.get(zone.metadata.zone_type, COLORS["normal"])
+ 
+-        self.current_turn += 1
+-        self.progress = 0.0
+-        self.animating = True
++    def _conn_capacity(self, conn) -> int:
++        meta = getattr(conn, "metadata", None)
++        if hasattr(meta, "max_link_capacity"):
++            return int(meta.max_link_capacity)
++        if isinstance(meta, int):
++            return meta
++        return 1
+ 
+-    def draw(self):
++    # ---------- drone placement ----------
++
++    def _group_drones(self, snapshot: Dict[str, str]) -> Dict[str, List[str]]:
++        grouped: Dict[str, List[str]] = {}
++        for drone_id, location in snapshot.items():
++            grouped.setdefault(location, []).append(drone_id)
++        return grouped
++
++    def _positions_in_zone(self, center: pygame.Vector2, count: int) -> List[Tuple[int, int]]:
++        if count <= 1:
++            return [(int(center.x), int(center.y))]
++
++        radius = max(8, self._zone_radius() - 10)
++        pts: List[Tuple[int, int]] = []
++        for i in range(count):
++            angle = (2 * math.pi * i) / count - math.pi / 2
++            px = center.x + math.cos(angle) * radius * 0.55
++            py = center.y + math.sin(angle) * radius * 0.55
++            pts.append((int(px), int(py)))
++        return pts
++
++    def _positions_on_connection(self, conn_name: str, count: int) -> List[Tuple[int, int]]:
++        conn = self.connection_by_name[conn_name]
++        a = self._world_to_screen(conn.zone_a.x, conn.zone_a.y)
++        b = self._world_to_screen(conn.zone_b.x, conn.zone_b.y)
++        mid = (a + b) / 2
++
++        dx = b.x - a.x
++        dy = b.y - a.y
++        length = math.hypot(dx, dy)
++        if length == 0:
++            return [(int(mid.x), int(mid.y))]
++
++        # unit perpendicular vector
++        nx = -dy / length
++        ny = dx / length
++
++        spacing = 12
++        positions: List[Tuple[int, int]] = []
++        start = -(count - 1) / 2.0
++
++        for i in range(count):
++            t = start + i
++            px = mid.x + nx * t * spacing
++            py = mid.y + ny * t * spacing
++            positions.append((int(px), int(py)))
++
++        return positions
++
++    # ---------- drawing ----------
++
++    def _draw_background(self) -> None:
+         self.screen.fill(COLORS["background"])
+ 
+-        # 1. Draw Connections (Lines)
+-        drawn_lines = set()
++    def _draw_connections(self) -> None:
++        drawn = set()
++
+         for zone, connections in self.graph.elements.items():
+             for neighbor, conn in connections:
+-                if conn.name not in drawn_lines:
+-                    start = self._get_coords(conn.zone_a.name)
+-                    end = self._get_coords(conn.zone_b.name)
+-                    pygame.draw.line(self.screen, COLORS["line"], start, end, 3)
+-                    drawn_lines.add(conn.name)
++                if conn.name in drawn:
++                    continue
++
++                start = self._world_to_screen(conn.zone_a.x, conn.zone_a.y)
++                end = self._world_to_screen(conn.zone_b.x, conn.zone_b.y)
++
++                width = 2 if self._conn_capacity(conn) == 1 else 4
++                pygame.draw.line(self.screen, COLORS["line"], start, end, width)
++
++                mid = (start + end) / 2
++                cap = self.small_font.render(
++                    str(self._conn_capacity(conn)),
++                    True,
++                    COLORS["line_text"],
++                )
++                self.screen.blit(
++                    cap,
++                    (mid.x - cap.get_width() / 2, mid.y - 12),
++                )
++
++                drawn.add(conn.name)
++
++    def _draw_zones(self) -> None:
++        radius = self._zone_radius()
+ 
+-        # 2. Draw Zones (Circles)
+         for zone in self.graph.elements.keys():
+-            pos = self._get_coords(zone.name)
+-            
+-            # Determine color
+-            color = COLORS["normal"]
+-            if zone.prefix == "start_hub": color = COLORS["start_hub"]
+-            elif zone.prefix == "end_hub": color = COLORS["end_hub"]
+-            elif zone.metadata.zone_type in COLORS: color = COLORS[zone.metadata.zone_type]
+-
+-            pygame.draw.circle(self.screen, color, (int(pos.x), int(pos.y)), 20)
+-            pygame.draw.circle(self.screen, (0,0,0), (int(pos.x), int(pos.y)), 20, 2) # Border
+-
+-            # Draw Zone Name
+-            text = self.font.render(zone.name, True, COLORS["text"])
+-            self.screen.blit(text, (pos.x - text.get_width()//2, pos.y - 35))
+-
+-        # 3. Draw Drones
+-        for drone_id in self.drone_positions.keys():
+-            start_pos = self._get_coords(self.drone_positions[drone_id])
+-            target_pos = self._get_coords(self.drone_targets[drone_id])
+-            
+-            # Lerp for smooth animation
+-            current_pos = start_pos.lerp(target_pos, self.progress)
+-            
+-            # Add jitter so drones don't perfectly overlap
+-            offset_x, offset_y = self.drone_offsets[drone_id]
+-            draw_x = int(current_pos.x + offset_x)
+-            draw_y = int(current_pos.y + offset_y)
+-
+-            pygame.draw.circle(self.screen, COLORS["drone"], (draw_x, draw_y), 6)
+-            pygame.draw.circle(self.screen, (0,0,0), (draw_x, draw_y), 6, 1)
+-
+-        # 4. Draw UI
+-        ui_text = self.large_font.render(f"Turn: {self.current_turn} / {self.total_turns}", True, COLORS["text"])
+-        self.screen.blit(ui_text, (20, 20))
+-        
+-        controls = self.font.render("SPACE: Next Turn | ENTER: Auto-Play | ESC: Quit", True, COLORS["text"])
+-        self.screen.blit(controls, (20, 50))
++            pos = self._world_to_screen(zone.x, zone.y)
++
++            pygame.draw.circle(
++                self.screen,
++                self._zone_color(zone),
++                (int(pos.x), int(pos.y)),
++                radius,
++            )
++            pygame.draw.circle(
++                self.screen,
++                COLORS["outline"],
++                (int(pos.x), int(pos.y)),
++                radius,
++                2,
++            )
++
++            # name
++            label = self.font.render(zone.name, True, COLORS["text"])
++            self.screen.blit(
++                label,
++                (pos.x - label.get_width() / 2, pos.y - radius - 22),
++            )
++
++            # cap
++            cap_value = "∞" if zone.prefix in ("start_hub", "end_hub") else str(zone.metadata.max_drones)
++            cap = self.small_font.render(f"cap:{cap_value}", True, COLORS["muted"])
++            self.screen.blit(
++                cap,
++                (pos.x - cap.get_width() / 2, pos.y + radius + 4),
++            )
++
++    def _draw_drones(self, snapshot: Dict[str, str]) -> None:
++        grouped = self._group_drones(snapshot)
++
++        for location_name, drone_ids in grouped.items():
++            if location_name in self.zone_by_name:
++                center = self._get_coords(location_name)
++                positions = self._positions_in_zone(center, len(drone_ids))
++            else:
++                positions = self._positions_on_connection(location_name, len(drone_ids))
+ 
++            for i, drone_id in enumerate(drone_ids):
++                px, py = positions[i]
++                pygame.draw.circle(self.screen, COLORS["drone"], (px, py), 8)
++                pygame.draw.circle(self.screen, COLORS["drone_text"], (px, py), 8, 1)
++
++                txt = self.small_font.render(drone_id[1:], True, COLORS["drone_text"])
++                self.screen.blit(
++                    txt,
++                    (px - txt.get_width() / 2, py - txt.get_height() / 2),
++                )
++
++    def _draw_hud(self) -> None:
++        panel = pygame.Rect(14, 14, 430, 96)
++        pygame.draw.rect(self.screen, COLORS["panel"], panel, border_radius=10)
++        pygame.draw.rect(self.screen, COLORS["panel_border"], panel, 1, border_radius=10)
++
++        title = self.big_font.render(
++            f"Turn {self.turn_index}/{len(self.snapshots) - 1}",
++            True,
++            COLORS["text"],
++        )
++        self.screen.blit(title, (26, 26))
++
++        mode = "AUTO" if self.auto_play else "PAUSE"
++        line1 = self.font.render(
++            f"Mode: {mode}   Delay: {self.delay_ms} ms   Zoom: {self.zoom:.2f}x",
++            True,
++            COLORS["muted"],
++        )
++        self.screen.blit(line1, (26, 60))
++
++        line2 = self.small_font.render(
++            "SPACE play/pause | LEFT prev | RIGHT next | R restart`",
++            True,
++            COLORS["muted"],
++        )
++        self.screen.blit(line2, (26, 86))
++
++    def _draw_timeline(self) -> None:
++        total_steps = max(1, len(self.snapshots) - 1)
++
++        bar_x = 40
++        bar_y = self.height - 28
++        bar_w = self.width - 80
++        bar_h = 8
++
++        pygame.draw.rect(
++            self.screen,
++            COLORS["timeline"],
++            (bar_x, bar_y, bar_w, bar_h),
++            border_radius=4,
++        )
++
++        progress = self.turn_index / total_steps
++        fill_w = int(progress * bar_w)
++
++        pygame.draw.rect(
++            self.screen,
++            COLORS["timeline_fill"],
++            (bar_x, bar_y, fill_w, bar_h),
++            border_radius=4,
++        )
++
++        knob_x = bar_x + fill_w
++        pygame.draw.circle(
++            self.screen,
++            COLORS["timeline_knob"],
++            (knob_x, bar_y + bar_h // 2),
++            8,
++        )
++
++    def draw(self) -> None:
++        self._draw_background()
++        self._draw_connections()
++        self._draw_zones()
++        self._draw_drones(self.snapshots[self.turn_index])
++        self._draw_hud()
++        self._draw_timeline()
+         pygame.display.flip()
+ 
+-    def run(self):
+-        running = True
+-        while running:
+-            # Handle Events
++    # ---------- events ----------
++
++    def _handle_resize(self, event: pygame.event.Event) -> None:
++        self.width, self.height = event.w, event.h
++        self.screen = pygame.display.set_mode(
++            (self.width, self.height), pygame.RESIZABLE
++        )
++        self._recompute_layout()
++
++    def _zoom_at(self, factor: float) -> None:
++        old_zoom = self.zoom
++        self.zoom = max(0.45, min(2.5, self.zoom * factor))
++        if self.zoom != old_zoom:
++            self._clamp_camera()
++
++    def run(self) -> None:
++        dragging = False
++        last_mouse = (0, 0)
++
++        while self.running:
++            now = pygame.time.get_ticks()
++
+             for event in pygame.event.get():
+                 if event.type == pygame.QUIT:
+-                    running = False
++                    self.running = False
++
++                elif event.type == pygame.VIDEORESIZE:
++                    self._handle_resize(event)
++
+                 elif event.type == pygame.KEYDOWN:
+                     if event.key == pygame.K_ESCAPE:
+-                        running = False
+-                    elif event.key == pygame.K_SPACE and not self.animating:
+-                        self._advance_turn()
+-                    elif event.key == pygame.K_RETURN:
++                        self.running = False
++                    elif event.key == pygame.K_SPACE:
+                         self.auto_play = not self.auto_play
++                    elif event.key == pygame.K_RIGHT:
++                        self._next_turn()
++                    elif event.key == pygame.K_LEFT:
++                        self._previous_turn()
++                    elif event.key == pygame.K_r:
++                        self._restart()
++                    elif event.key == pygame.K_UP:
++                        self.delay_ms = max(100, self.delay_ms - 100)
++                    elif event.key == pygame.K_DOWN:
++                        self.delay_ms += 100
++
++                elif event.type == pygame.MOUSEBUTTONDOWN:
++                    if event.button == 1:
++                        dragging = True
++                        last_mouse = event.pos
++                    elif event.button == 4:
++                        self._zoom_at(1.1)
++                    elif event.button == 5:
++                        self._zoom_at(0.9)
++
++                elif event.type == pygame.MOUSEBUTTONUP:
++                    if event.button == 1:
++                        dragging = False
++
++                elif event.type == pygame.MOUSEMOTION and dragging:
++                    mx, my = event.pos
++                    lx, ly = last_mouse
++                    self.camera_x += mx - lx
++                    self.camera_y += my - ly
++                    self._clamp_camera()
++                    last_mouse = event.pos
+ 
+-            # Handle Animation Logic
+-            if self.animating:
+-                self.progress += self.anim_speed
+-                if self.progress >= 1.0:
+-                    self.progress = 1.0
+-                    self.animating = False
+-            elif self.auto_play:
+-                self._advance_turn()
++            if self.auto_play and now - self.last_tick >= self.delay_ms:
++                if self.turn_index < len(self.snapshots) - 1:
++                    self._next_turn()
++                else:
++                    self.auto_play = False
++                self.last_tick = now
+ 
+             self.draw()
+-            self.clock.tick(60) # 60 FPS
++            self.clock.tick(60)
+ 
+         pygame.quit()
+diff --git a/src/parser.py b/src/parser.py
+index e20adb3..324c8ca 100644
+--- a/src/parser.py
++++ b/src/parser.py
+@@ -1,138 +1,292 @@
+ import re
+-from typing import List, Dict, Any
++from typing import Any, Dict, List, Tuple
+ from src.custom_exception import (
+-    HubException,
+     ConnectionException,
++    HubException,
+     ParsingException
+ )
+ 
+ 
+ class Parser:
+-    def __init__(self, path: str):
++    def __init__(self, path: str) -> None:
+         self.path = path
+         self.pattern = r'\[.*?\]|\S+'
+-        self.hub_names = []
+-        self.data: List[Dict[str, Any]] = []
+ 
+-    def get_hubs(self, line: str):
+-        parts = re.findall(self.pattern, line)
+-        metadata = {"zone": "normal", "color": None, "max_drones": 1}
+-        if len(parts) != 4 and len(parts) != 5:
+-            raise HubException(
+-                "Zone declarations should be like this: "
+-                "prefix: <name> <x> <y> [metadata]`"
+-            )
++    def _getlines(self, data: str) -> List[Tuple[int, str]]:
++        data_lines = data.split('\n')
++        lines = []
++        for i, line in enumerate(data_lines):
++            line = line.split('#')[0].strip()
++            if line == "":
++                continue
++            lines.append((i+1, line))
++        return lines
++
++    def _parse_int(self, value: str, line_no: int, field: str) -> int:
++        try:
++            return int(value)
++        except ValueError:
++            raise ParsingException(f"Line {line_no}: {field} "
++                                   "must be an integer")
+ 
+-        prefix = parts[0].replace(':', '')
+-        if prefix not in ['start_hub', 'hub', 'end_hub']:
++    def _get_nbdrones(self, line: str, line_no: int) -> Dict[str, Any]:
++        data = {}
++        parts = line.split(':', 1)
++        if len(parts) != 2:
++            raise ParsingException(f"Line {line_no}: The correct syntax for "
++                                   "nb_drones is `nb_drones: <number>`")
++        if ':' in parts[0] or ':' in parts[1]:
++            raise ParsingException(f"Line {line_no}: The correct syntax for "
++                                   "nb_drones is `nb_drones: <number>`")
++        nbr = self._parse_int(parts[1].strip(), line_no, 'nb_drones')
++        if nbr <= 0:
++            raise ParsingException(f"Line {line_no}: The nb_drones should be "
++                                   "a positive number `>0`")
++        data.update({"type": "nb_drones", "line_no": line_no, "value": nbr})
++        return data
++
++    def _get_hubs(self, line: str, line_no: int) -> Dict[str, Any]:
++        data = {}
++        metadata = {"zone": "normal", "color": None, "max_drones": 1}
++        prefix, content = line.split(':', 1)
++        if ':' in prefix or ':' in content:
++            raise HubException(f"Line {line_no}: The correct syntax "
++                               "for hubs is "
++                               "`<prefix>: <name> <x> <y> <metadata>`")
++        parts = re.findall(self.pattern, content)
++        if len(parts) != 3 and len(parts) != 4:
++            raise HubException(f"Line {line_no}: The correct syntax for hubs "
++                               "is `<prefix>: <name> <x> <y> <metadata>`")
++        if prefix not in ["start_hub", "end_hub", "hub"]:
+             raise HubException("The prefix should only be: 'start_hub', "
+                                "'hub' or 'end_hub'")
+-
+-        name = parts[1]
++        name = parts[0]
++        x = self._parse_int(parts[1], line_no, 'x')
++        y = self._parse_int(parts[2], line_no, 'y')
+         if '-' in name:
+-            raise HubException('Dashes are forbiden in zone names')
+-        self.hub_names.append(name)
+-        x = int(parts[2])
+-        y = int(parts[3])
+-
+-        if len(parts) == 5:
+-            metadata_part = parts[4]
+-            if (not metadata_part.startswith('[')
+-                    and not metadata_part.endswith(']')):
+-                raise HubException('The metadata should be in []')
+-            metadata_part = metadata_part.replace('[', '')
+-            metadata_part = metadata_part.replace(']', '')
+-            for data in metadata_part.split(' '):
+-                if '=' not in data:
++            raise HubException(f"Line {line_no}: Dashes are forbiden "
++                               "in zone names")
++        if len(parts) == 4:
++            md_part = parts[3]
++            if (not md_part.startswith('[')
++                    or not md_part.endswith(']')):
++                raise HubException(f"Line {line_no}: The metadata "
++                                   "should be in []")
++            md_part = md_part.replace('[', '')
++            md_part = md_part.replace(']', '')
++            md_parts = md_part.split(' ')
++            found_zone, found_color, found_max = False, False, False
++            for part in md_parts:
++                if part.strip() == '':
+                     continue
+-                key, value = data.split('=', 1)
+-    
+-                if key not in ['zone', 'color', 'max_drones']:
+-                    raise HubException(f"Invalid metadata key: {key}")
+-        
+-                if key == 'max_drones':
+-                    metadata['max_drones'] = int(value)
++                part = part.strip()
++                if '=' not in part:
++                    raise HubException(f"Line {line_no}: The data inside "
++                                       "the metadata should be like "
++                                       "this key=value")
++                key, value = part.split('=', 1)
++                key, value = key.strip(), value.strip()
++                if '=' in value:
++                    raise HubException(f"Line {line_no}: The data inside "
++                                       "the metadata should be like "
++                                       "this key=value")
++                if key not in ["zone", "color", "max_drones"]:
++                    raise HubException(f"Line {line_no}: Invalid metadata "
++                                       f"key: {key}")
++                if key == "zone":
++                    if not found_zone:
++                        if (value not in ["normal", "priority",
++                                          "restricted", "blocked"]):
++                            raise HubException(f"Line {line_no}: The only "
++                                               "allowed values for zone is "
++                                               "\"normal\", \"priority\", "
++                                               "\"restricted\", \"blocked\"")
++                        metadata.update({"zone": value})
++                        found_zone = True
++                    else:
++                        raise HubException(f"Line {line_no}: Only one type "
++                                           "zone should exist")
++                elif key == "color":
++                    if not found_color:
++                        metadata.update({"color": value})
++                        found_color = True
++                    else:
++                        raise HubException(f"Line {line_no}: Only one color "
++                                           "should exist")
+                 else:
+-                    metadata[key] = value
+-
+-        hub = {
+-            "prefix": prefix,
+-            "name": name,
+-            "x": x,
+-            "y": y,
+-            "metadata": metadata
+-        }
+-        return hub
++                    if not found_max:
++                        max_d = self._parse_int(value, line_no, 'max_drones')
++                        if max_d <= 0:
++                            raise HubException(f"Line {line_no}: The "
++                                               "max_drones should be positive "
++                                               "number `>0`")
++                        metadata.update({"max_drones": max_d})
++                        found_max = True
++                    else:
++                        raise HubException(f"Line {line_no}: Only one "
++                                           "max_drones should exist")
++        data.update({"type": "zone", "prefix": prefix, "name": name, "x": x,
++                     "y": y, "metadata": metadata, "line_no": line_no})
++        return data
+ 
+-    def get_connections(self, line: str):
+-        parts = re.findall(self.pattern, line)
+-        if len(parts) not in [2, 3]:
+-            raise ConnectionException(
+-                "Connection declarations should be like this: "
+-                "'connection: name1-name2'"
+-            )
+-        metadata = {
+-            'max_link_capacity': 1
+-        }
+-        con_from = parts[1].split('-')[0]
+-        con_to = parts[1].split('-')[1]
+-        if con_from not in self.hub_names:
+-            raise ConnectionException('')
+-        if con_to not in self.hub_names:
+-            raise ConnectionException('')
++    def _get_connection(self, line: str, line_no: int):
++        data = {}
++        metadata = {"max_link_capacity": 1}
++        prefix, content = line.split(':', 1)
++        if ':' in prefix or ':' in content:
++            raise ConnectionException(f"Line {line_no}: The correct syntax for"
++                                      " connection is `connection: "
++                                      "<zone_name>-<zone_name> <metadata>`")
++        parts = re.findall(self.pattern, content)
++        if len(parts) not in [1, 2]:
++            raise ConnectionException(f"Line {line_no}: The correct syntax for"
++                                      " connection is `connection: "
++                                      "<zone_name>-<zone_name> <metadata>`")
++        zone_names = parts[0].split('-', 1)
++        if len(zone_names) != 2:
++            raise ConnectionException(f"Line {line_no}: THe connection should "
++                                      "be like this `<zone_name>-<zone_name>`")
++        if '-' in zone_names[1]:
++            raise ConnectionException(f"Line {line_no}: Dashes are forbiden "
++                                      "in zone names")
++        if len(parts) == 2:
++            md_part = parts[1]
++            if (not md_part.startswith('[')
++                    or not md_part.endswith(']')):
++                raise HubException(f"Line {line_no}: The metadata should "
++                                   "be in []")
++            md_part = md_part.replace('[', '')
++            md_part = md_part.replace(']', '')
++            md_part = md_part.strip()
++            key, value = md_part.split('=', 1)
++            key = key.strip()
++            value = value.strip()
++            max_c = self._parse_int(value, line_no, 'max_link_capacity')
++            if key != "max_link_capacity":
++                raise ConnectionException(
++                    f"Line {line_no}: The only allowed connection metadata "
++                    "key is 'max_link_capacity'"
++                )
++            if max_c <= 0:
++                raise ConnectionException(f"Line {line_no}: The "
++                                          "max_link_capacity needs to be "
++                                          "positive number `>0`")
++            metadata.update({"max_link_capacity": max_c})
++        data.update({"type": "connection",
++                     "name": f"{zone_names[0]}-{zone_names[1]}",
++                     "from": zone_names[0],
++                     "to": zone_names[1], "metadata": metadata,
++                     "line_no": line_no})
+ 
+-        if len(parts) == 3:
+-            metadata_part = parts[2]
+-            if (not metadata_part.startswith('[')
+-                    and not metadata_part.endswith(']')):
+-                raise HubException('The metadata should be in []')
+-            metadata_part = metadata_part.replace('[', '')
+-            metadata_part = metadata_part.replace(']', '')
+-            for data in metadata_part.split(' '):
+-                data_parts = data.split('=')
+-                if data_parts[0] != "max_link_capacity":
+-                    raise HubException("The args in metadata should only be: "
+-                                       "'max_link_capacity'")
+-                metadata.update({data_parts[0]: data_parts[1]})
+-        connection = {
+-            'name': f"{con_from}-{con_to}",
+-            'con_from': con_from,
+-            'con_to': con_to,
+-            'metadata': metadata
+-        }
+-        return connection
++        return data
+ 
+-    def get_data(self, data: str):
+-        lines = data.split("\n")
+-        hubs = []
+-        connections = []
++    def _gettypes(self, lines: List[Tuple[int, str]]):
+         found_nbr = False
+-        info = {"nbr_drones": 0, "hubs": [], "connections": []}
+-        for line in lines:
+-            if line.startswith("nb_drones:") and not found_nbr:
+-                info['nbr_drones'] = int(line.split(" ")[1])
+-                found_nbr = True
+-            elif (
+-                line.startswith("hub:")
+-                or line.startswith("start_hub")
+-                or line.startswith("end_hub")
+-            ):
+-                hubs.append(line)
+-            elif line.startswith("connection:"):
+-                connections.append(line)
++        found_start = False
++        found_end = False
++        record = []
++        for line_no, line in lines:
++            if line.startswith('nb_drones:'):
++                if not found_nbr:
++                    record.append(self._get_nbdrones(line, line_no))
++                    found_nbr = True
++                else:
++                    raise ParsingException(f"Line {line_no}: Only one "
++                                           "nb_drones should exist in "
++                                           "the map.")
++            elif line.startswith(("start_hub:", "hub:", "end_hub:")):
++                if line.startswith("start_hub:"):
++                    if not found_start:
++                        record.append(self._get_hubs(line, line_no))
++                        found_start = True
++                    else:
++                        raise HubException(f"Line {line_no}: Only one "
++                                           "start_hub should exist in "
++                                           "the map.")
++                elif line.startswith("end_hub:"):
++                    if not found_end:
++                        record.append(self._get_hubs(line, line_no))
++                        found_end = True
++                    else:
++                        raise HubException(f"Line {line_no}: Only one end_hub "
++                                           "should exist in the map.")
++                else:
++                    record.append(self._get_hubs(line, line_no))
++            elif line.startswith('connection:'):
++                record.append(self._get_connection(line, line_no))
++            else:
++                raise ParsingException(f"Line {line_no}: unknown directive")
++        if not found_start:
++            raise ParsingException("The map must contain "
++                                   "exactly one 'start_hub'")
++        if not found_end:
++            raise ParsingException("The map must contain "
++                                   "exactly one 'end_hub'")
++        if not found_nbr:
++            raise ParsingException("The map must contain 'nb_drones'")
++        return record
++
++    def _validate(self, records: List[Dict[str, Any]]):
++        seen_names = set()
++        for rec in records:
++            if rec["type"] == "zone":
++                name = rec["name"]
++                if name in seen_names:
++                    raise HubException(
++                        f"Line {rec['line_no']}: Duplicate zone name '{name}'"
++                    )
++                seen_names.add(name)
++
++        zone_names = {rec["name"] for rec in records if rec["type"] == "zone"}
++        for rec in records:
++            if rec["type"] == "connection":
++                if rec["from"] not in zone_names:
++                    raise ConnectionException(
++                        f"Line {rec['line_no']}: Unknown zone "
++                        f"'{rec['from']}' in connection"
++                    )
++                if rec["to"] not in zone_names:
++                    raise ConnectionException(
++                        f"Line {rec['line_no']}: Unknown zone "
++                        f"'{rec['to']}' in connection"
++                    )
++
++        seen_edges = set()
++        for rec in records:
++            if rec["type"] == "connection":
++                if rec["from"] == rec["to"]:
++                    raise ConnectionException(
++                        f"Line {rec['line_no']}: Self-loop connections "
++                        "are not allowed"
++                    )
++                edge = tuple(sorted((rec["from"], rec["to"])))
++                if edge in seen_edges:
++                    raise ConnectionException(
++                        f"Line {rec['line_no']}: Duplicate connection "
++                        f"'{rec['from']}-{rec['to']}'"
++                    )
++                seen_edges.add(edge)
+ 
+-        if len(hubs) <= 2:
+-            raise ParsingException('')
+-        if len(connections) == 0:
+-            raise ParsingException('')
+-        for hub in hubs:
+-            info['hubs'].append(self.get_hubs(hub))
+-        for conn in connections:
+-            info['connections'].append(self.get_connections(conn))
+-        return info
++        result = {"nb_drones": 0, "hubs": [], "connections": []}
++        for rec in records:
++            if rec["type"] == "nb_drones":
++                result["nb_drones"] = rec["value"]
++            elif rec["type"] == "zone":
++                result["hubs"].append(rec)
++            elif rec["type"] == "connection":
++                result["connections"].append(rec)
++        return result
+ 
+     def parser(self):
+-        with open(self.path) as f:
++        with open(self.path, 'r') as f:
+             data = f.read()
+-        self.data.append(self.get_data(data))
+-        return self.data
++        lines = self._getlines(data)
++        if len(lines) == 0:
++            raise ParsingException("THe file is empty?")
++        if not lines[0][1].startswith("nb_drones"):
++            raise ParsingException("The first line must define the number "
++                                   "of drones using "
++                                   "nb_drones: <positive_integer>.")
++        data_types = self._gettypes(lines)
++        result = self._validate(data_types)
++        return result
+diff --git a/src/simulation.py b/src/simulation.py
+index b9dd94a..5ba52fa 100644
+--- a/src/simulation.py
++++ b/src/simulation.py
+@@ -1,9 +1,11 @@
+ from typing import Any, Dict, List
+-from src.data import Connection, Graph, Drone, Zone
++from src.data import Graph, Drone, Zone
+ import heapq
+ 
++
+ class Simulation:
+-    def __init__(self, graph: Graph, drones: List[Drone], nbr_drones: int, loc_drones: Dict[str, List[Drone]]) -> None:
++    def __init__(self, graph: Graph, drones: List[Drone], nbr_drones: int,
++                 loc_drones: Dict[str, List[Drone]]) -> None:
+         self.graph = graph
+         self.drones = drones
+         self.loc_drones = loc_drones
+@@ -15,7 +17,6 @@ class Simulation:
+                 "normal": 1.0,
+                 "restricted": 2.0,
+                 "priority": 0.9,
+-                "blocked": float("inf")
+                 }
+ 
+     def _get_path(self, previous: Dict[str, Any]):
+@@ -34,18 +35,23 @@ class Simulation:
+         first_zone = start
+         distances[first_zone.name] = 0
+         hq = []
+-        heapq.heappush(hq, (distances[first_zone.name], first_zone.name, first_zone))
++        heapq.heappush(hq, (distances[first_zone.name],
++                            first_zone.name, first_zone))
+         while hq:
+             distance, name, zone_object = heapq.heappop(hq)
+             visited[name] = True
+             for v, ed in self.graph.elements[zone_object]:
+-                if not visited[v.name]:
+-                    new_distance = self.type_zone[v.metadata.zone_type] + distance + penalties[v.name]
++                if not visited[v.name] and v.metadata.zone_type != "blocked":
++                    new_distance = (self.type_zone[v.metadata.zone_type]
++                                    + distance + penalties[v.name])
+                     if new_distance < distances[v.name]:
+                         distances[v.name] = new_distance
+                         previous[v.name] = zone_object
+                         heapq.heappush(hq, (distances[v.name], v.name, v))
+-        return self._get_path(previous) 
++        if (previous[self.graph.end_hub.name] is None
++                and start != self.graph.end_hub):
++            raise ValueError("No valid route from start_hub to end_hub")
++        return self._get_path(previous)
+ 
+     def calculate_routes(self, start: Zone):
+         penalties = {zone.name: 0.0 for zone in self.graph.elements.keys()}
+@@ -59,7 +65,7 @@ class Simulation:
+             if i % 2 == 0:
+                 for zone_name in penalties:
+                     penalties[zone_name] = max(0.0, penalties[zone_name] - 0.4)
+-    
++
+     def _get_connection(self, old: Zone, new: Zone):
+         for zone, conn in self.graph.elements.get(old, []):
+             if zone == new:
+@@ -84,18 +90,20 @@ class Simulation:
+                 if next_zone.prefix == "end_hub":
+                     self.drones_delivered += 1
+                     drone.done = 1
+-            
++
+             half_move.clear()
+             can_move = []
+             for drone in self.drones:
+                 if drone.done or drone.has_turn:
+                     continue
++                if len(drone.path) < 2:
++                    raise ValueError(f"Drone {drone.id} has no next move")
+                 next_des = drone.path[1]
+                 old_des = drone.current_location
+                 d_index = self.loc_drones[old_des.name].index(drone)
+                 self.loc_drones[old_des.name].pop(d_index)
+                 can_move.append((old_des, drone, next_des))
+-           
++
+             connection_usage: Dict[str, int] = {}
+             for old, drone, next in can_move:
+                 connection = self._get_connection(old, next)
+@@ -106,14 +114,14 @@ class Simulation:
+                 if used >= connection.metadata:
+                     self.loc_drones[old.name].append(drone)
+                     continue
+-                                    
+-                if (len(self.loc_drones[next.name]) == next.metadata.max_drones
+-                    and next.prefix != "end_hub"):
++                going = sum(1 for nd, nc, nn in half_move if nn.name == next.name)
++                if (len(self.loc_drones[next.name]) + going == next.metadata.max_drones
++                        and next.prefix != "end_hub"):
+                     self.loc_drones[old.name].append(drone)
+                     continue
+ 
+                 connection_usage[connection.name] = used + 1
+-                
++
+                 if next.metadata.zone_type == "restricted":
+                     self.loc_drones[connection.name].append(drone)
+                     drone.current_location = connection
+diff --git a/src/visual.py b/src/visual.py
+index 9d0192f..444705d 100644
+--- a/src/visual.py
++++ b/src/visual.py
+@@ -2,6 +2,7 @@ from typing import List
+ from src.data import Graph
+ import pygame
+ 
++
+ class Visualization:
+     def __init__(self, graph: Graph, logs: List[str]) -> None:
+         self.graph = graph
+diff --git a/uv.lock b/uv.lock
+index 29bcd70..7882a11 100644
+--- a/uv.lock
++++ b/uv.lock
+@@ -2,16 +2,32 @@ version = 1
+ revision = 3
+ requires-python = ">=3.10"
+ 
++[[package]]
++name = "coloraide"
++version = "8.8.1"
++source = { registry = "https://pypi.org/simple" }
++dependencies = [
++    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
++]
++sdist = { url = "https://files.pythonhosted.org/packages/a9/f6/2d54d752354091b02862c15ddb8451ff7ca6c19e67dc71692a5d80b48e12/coloraide-8.8.1.tar.gz", hash = "sha256:8a59c2639b735d0c0479f82829c88b617a0caa92fd58f9838eac71865c1c93a0", size = 22017311, upload-time = "2026-03-22T20:42:00.322Z" }
++wheels = [
++    { url = "https://files.pythonhosted.org/packages/20/d4/4c00d0027b0cba0e8cc1e03dfdedf1507c5e885dbb96bdb641f170a904dc/coloraide-8.8.1-py3-none-any.whl", hash = "sha256:b7cca1cd4089368d6282f7c4fac2a78c8403af48d89e318a8553939e2728e82d", size = 346912, upload-time = "2026-03-22T20:41:58.347Z" },
++]
++
+ [[package]]
+ name = "fly-in"
+ version = "0.1.0"
+ source = { virtual = "." }
+ dependencies = [
++    { name = "coloraide" },
+     { name = "pygame" },
+ ]
+ 
+ [package.metadata]
+-requires-dist = [{ name = "pygame", specifier = ">=2.6.1" }]
++requires-dist = [
++    { name = "coloraide", specifier = ">=8.8.1" },
++    { name = "pygame", specifier = ">=2.6.1" },
++]
+ 
+ [[package]]
+ name = "pygame"
+@@ -48,3 +64,12 @@ wheels = [
+     { url = "https://files.pythonhosted.org/packages/a6/06/29e939b34d3f1354738c7d201c51c250ad7abefefaf6f8332d962ff67c4b/pygame-2.6.1-cp313-cp313-win32.whl", hash = "sha256:3acd8c009317190c2bfd81db681ecef47d5eb108c2151d09596d9c7ea9df5c0e", size = 10249309, upload-time = "2024-09-29T11:10:23.329Z" },
+     { url = "https://files.pythonhosted.org/packages/7e/11/17f7f319ca91824b86557e9303e3b7a71991ef17fd45286bf47d7f0a38e6/pygame-2.6.1-cp313-cp313-win_amd64.whl", hash = "sha256:813af4fba5d0b2cb8e58f5d95f7910295c34067dcc290d34f1be59c48bd1ea6a", size = 10620084, upload-time = "2024-09-29T11:48:51.587Z" },
+ ]
++
++[[package]]
++name = "typing-extensions"
++version = "4.15.0"
++source = { registry = "https://pypi.org/simple" }
++sdist = { url = "https://files.pythonhosted.org/packages/72/94/1a15dd82efb362ac84269196e94cf00f187f7ed21c242792a923cdb1c61f/typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466", size = 109391, upload-time = "2025-08-25T13:49:26.313Z" }
++wheels = [
++    { url = "https://files.pythonhosted.org/packages/18/67/36e9267722cc04a6b9f15c7f3441c2363321a3ea07da7ae0c0707beb2a9c/typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548", size = 44614, upload-time = "2025-08-25T13:49:24.86Z" },
++]

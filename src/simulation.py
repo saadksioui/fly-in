@@ -1,9 +1,11 @@
 from typing import Any, Dict, List
-from src.data import Connection, Graph, Drone, Zone
+from src.data import Graph, Drone, Zone
 import heapq
 
+
 class Simulation:
-    def __init__(self, graph: Graph, drones: List[Drone], nbr_drones: int, loc_drones: Dict[str, List[Drone]]) -> None:
+    def __init__(self, graph: Graph, drones: List[Drone], nbr_drones: int,
+                 loc_drones: Dict[str, List[Drone]]) -> None:
         self.graph = graph
         self.drones = drones
         self.loc_drones = loc_drones
@@ -15,7 +17,6 @@ class Simulation:
                 "normal": 1.0,
                 "restricted": 2.0,
                 "priority": 0.9,
-                "blocked": float("inf")
                 }
 
     def _get_path(self, previous: Dict[str, Any]):
@@ -34,18 +35,23 @@ class Simulation:
         first_zone = start
         distances[first_zone.name] = 0
         hq = []
-        heapq.heappush(hq, (distances[first_zone.name], first_zone.name, first_zone))
+        heapq.heappush(hq, (distances[first_zone.name],
+                            first_zone.name, first_zone))
         while hq:
             distance, name, zone_object = heapq.heappop(hq)
             visited[name] = True
             for v, ed in self.graph.elements[zone_object]:
-                if not visited[v.name]:
-                    new_distance = self.type_zone[v.metadata.zone_type] + distance + penalties[v.name]
+                if not visited[v.name] and v.metadata.zone_type != "blocked":
+                    new_distance = (self.type_zone[v.metadata.zone_type]
+                                    + distance + penalties[v.name])
                     if new_distance < distances[v.name]:
                         distances[v.name] = new_distance
                         previous[v.name] = zone_object
                         heapq.heappush(hq, (distances[v.name], v.name, v))
-        return self._get_path(previous) 
+        if (previous[self.graph.end_hub.name] is None
+                and start != self.graph.end_hub):
+            raise ValueError("No valid route from start_hub to end_hub")
+        return self._get_path(previous)
 
     def calculate_routes(self, start: Zone):
         penalties = {zone.name: 0.0 for zone in self.graph.elements.keys()}
@@ -59,7 +65,7 @@ class Simulation:
             if i % 2 == 0:
                 for zone_name in penalties:
                     penalties[zone_name] = max(0.0, penalties[zone_name] - 0.4)
-    
+
     def _get_connection(self, old: Zone, new: Zone):
         for zone, conn in self.graph.elements.get(old, []):
             if zone == new:
@@ -84,18 +90,20 @@ class Simulation:
                 if next_zone.prefix == "end_hub":
                     self.drones_delivered += 1
                     drone.done = 1
-            
+
             half_move.clear()
             can_move = []
             for drone in self.drones:
                 if drone.done or drone.has_turn:
                     continue
+                if len(drone.path) < 2:
+                    raise ValueError(f"Drone {drone.id} has no next move")
                 next_des = drone.path[1]
                 old_des = drone.current_location
                 d_index = self.loc_drones[old_des.name].index(drone)
                 self.loc_drones[old_des.name].pop(d_index)
                 can_move.append((old_des, drone, next_des))
-           
+
             connection_usage: Dict[str, int] = {}
             for old, drone, next in can_move:
                 connection = self._get_connection(old, next)
@@ -106,14 +114,14 @@ class Simulation:
                 if used >= connection.metadata:
                     self.loc_drones[old.name].append(drone)
                     continue
-                                    
-                if (len(self.loc_drones[next.name]) == next.metadata.max_drones
-                    and next.prefix != "end_hub"):
+                going = sum(1 for nd, nc, nn in half_move if nn.name == next.name)
+                if (len(self.loc_drones[next.name]) + going == next.metadata.max_drones
+                        and next.prefix != "end_hub"):
                     self.loc_drones[old.name].append(drone)
                     continue
 
                 connection_usage[connection.name] = used + 1
-                
+
                 if next.metadata.zone_type == "restricted":
                     self.loc_drones[connection.name].append(drone)
                     drone.current_location = connection

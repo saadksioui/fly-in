@@ -17,6 +17,7 @@ class Metadata:
     color: Optional[str] = None
     max_drones: int = 1
 
+
 @dataclass(frozen=True)
 class Zone:
     prefix: str
@@ -26,12 +27,14 @@ class Zone:
     metadata: Metadata
     capacity: int = 0
 
+
 @dataclass
 class Connection:
     name: str
     zone_a: Zone
     zone_b: Zone
     metadata: int = 1
+
 
 @dataclass
 class Drone:
@@ -41,11 +44,13 @@ class Drone:
     done: bool = False
     has_turn: bool = False
 
+
 @dataclass
 class Graph:
     start_hub: Zone | None
     end_hub: Zone | None
-    elements: Dict[Zone, List[tuple[Zone, Connection]]] = field(default_factory=dict)
+    elements: Dict[Zone,
+                   List[tuple[Zone, Connection]]] = field(default_factory=dict)
 
     def add_zone(self, zone: Zone):
         if zone not in self.elements:
@@ -54,6 +59,9 @@ class Graph:
     def add_connection(self, connection: Connection):
         self.add_zone(connection.zone_a)
         self.add_zone(connection.zone_b)
-        self.elements[connection.zone_a].append((connection.zone_b, connection))
-        self.elements[connection.zone_b].append((connection.zone_a, connection))
-
+        self.elements[connection.zone_a].append(
+            (connection.zone_b, connection)
+            )
+        self.elements[connection.zone_b].append(
+            (connection.zone_a, connection)
+            )
