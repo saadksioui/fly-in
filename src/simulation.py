@@ -1,5 +1,5 @@
-from typing import Any, Dict, List, Optional, Tuple
-from src.data import Graph, Drone, Zone
+from typing import Dict, List, Optional, Tuple
+from src.data import Graph, Drone, Zone, Connection
 import heapq
 
 
@@ -19,9 +19,11 @@ class Simulation:
                 "priority": 0.9,
                 }
 
-    def _get_path(self, previous: Dict[str, Any]) -> List[Zone]:
-        end = self.graph.end_hub
-        path = []
+    def _get_path(self, previous: Dict[str, Optional[Zone]]) -> List[Zone]:
+        end: Optional[Zone] = self.graph.end_hub
+        if end is None:
+            return []
+        path: List[Zone] = []
         while end is not None:
             path.append(end)
             end = previous[end.name]
@@ -30,12 +32,15 @@ class Simulation:
 
     def find_path(self, start: Zone,
                   penalties: Dict[str, float]) -> List[Zone]:
-        distances = {v.name: float('inf') for v in self.graph.elements.keys()}
-        previous = {v.name: None for v in self.graph.elements.keys()}
+        distances: Dict[str, float] = {v.name: float('inf')
+                                       for v in self.graph.elements.keys()}
+        previous: Dict[str,
+                       Optional[Zone]] = {v.name: None
+                                          for v in self.graph.elements.keys()}
         visited = {v.name: False for v in self.graph.elements.keys()}
         first_zone = start
-        distances[first_zone.name] = 0
-        hq: List[Tuple[int, str, Zone]] = []
+        distances[first_zone.name] = 0.0
+        hq: List[Tuple[float, str, Zone]] = []
         heapq.heappush(hq, (distances[first_zone.name],
                             first_zone.name, first_zone))
         while hq:
@@ -49,6 +54,8 @@ class Simulation:
                         distances[v.name] = new_distance
                         previous[v.name] = zone_object
                         heapq.heappush(hq, (distances[v.name], v.name, v))
+        if self.graph.end_hub is None:
+            raise ValueError("No end_hub in graph")
         if (previous[self.graph.end_hub.name] is None
                 and start != self.graph.end_hub):
             raise ValueError("No valid route from start_hub to end_hub")
@@ -67,14 +74,14 @@ class Simulation:
                 for zone_name in penalties:
                     penalties[zone_name] = max(0.0, penalties[zone_name] - 0.4)
 
-    def _get_connection(self, old: Zone, new: Zone) -> Optional[Any]:
+    def _get_connection(self, old: Zone, new: Zone) -> Optional[Connection]:
         for zone, conn in self.graph.elements.get(old, []):
             if zone == new:
                 return conn
         return None
 
     def run_simulation(self) -> None:
-        half_move = []
+        half_move: List[Tuple[Drone, Connection, Zone]] = []
         while self.drones_delivered < self.total_drones:
             for drone in self.drones:
                 drone.has_turn = False
@@ -90,10 +97,10 @@ class Simulation:
                 drone.has_turn = True
                 if next_zone.prefix == "end_hub":
                     self.drones_delivered += 1
-                    drone.done = 1
+                    drone.done = True
 
             half_move.clear()
-            can_move = []
+            can_move: List[Tuple[Zone, Drone, Zone]] = []
             for drone in self.drones:
                 if drone.done or drone.has_turn:
                     continue
@@ -101,35 +108,36 @@ class Simulation:
                     raise ValueError(f"Drone {drone.id} has no next move")
                 next_des = drone.path[1]
                 old_des = drone.current_location
+                assert isinstance(old_des, Zone)
                 d_index = self.loc_drones[old_des.name].index(drone)
                 self.loc_drones[old_des.name].pop(d_index)
                 can_move.append((old_des, drone, next_des))
 
             connection_usage: Dict[str, int] = {}
             for old, drone, next in can_move:
-                connection = self._get_connection(old, next)
-                if connection is None:
+                conn = self._get_connection(old, next)
+                if conn is None:
                     self.loc_drones[old.name].append(drone)
                     continue
-                used = connection_usage.get(connection.name, 0)
-                if used >= connection.metadata:
+                used = connection_usage.get(conn.name, 0)
+                if used >= conn.metadata:
                     self.loc_drones[old.name].append(drone)
                     continue
-                going = sum(1 for nd, nc, nn in half_move
-                            if nn.name == next.name)
+                going = len([1 for nd, nc, nn in half_move
+                            if nn.name == next.name])
                 if (len(self.loc_drones[next.name])
                     + going == next.metadata.max_drones
                         and next.prefix != "end_hub"):
                     self.loc_drones[old.name].append(drone)
                     continue
 
-                connection_usage[connection.name] = used + 1
+                connection_usage[conn.name] = used + 1
 
                 if next.metadata.zone_type == "restricted":
-                    self.loc_drones[connection.name].append(drone)
-                    drone.current_location = connection
-                    half_move.append((drone, connection, next))
-                    logs.append(f"{drone.id}-{connection.name}")
+                    self.loc_drones[conn.name].append(drone)
+                    drone.current_location = conn
+                    half_move.append((drone, conn, next))
+                    logs.append(f"{drone.id}-{conn.name}")
                 else:
                     drone.current_location = next
                     self.loc_drones[next.name].append(drone)
@@ -137,7 +145,7 @@ class Simulation:
                     logs.append(f"{drone.id}-{next.name}")
                     drone.has_turn = True
                     if next.prefix == "end_hub":
-                        drone.done = 1
+                        drone.done = True
                         self.drones_delivered += 1
             self.logs.append(" ".join(logs))
             print(" ".join(logs))

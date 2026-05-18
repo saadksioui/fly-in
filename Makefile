@@ -1,6 +1,6 @@
 PYTHON = python3
 MODULE = -m src
-DEFAULT_MAP = maps/challenger/01_the_impossible_dream.txt
+MAP = maps/easy/01_linear_path.txt
 
 .PHONY: install run debug clean lint lint-strict
 
@@ -10,7 +10,7 @@ install:
 
 run:
 	@echo "Running simulation..."
-	$(PYTHON) $(MODULE) 
+	$(PYTHON) $(MODULE) $(MAP)
 
 debug:
 	@echo "Running in debug mode..."
@@ -18,7 +18,7 @@ debug:
 
 clean:
 	@echo "Cleaning cache files..."
-	find . -type d -name "__pycache__" -exec rm -rf {} +
+	rm -rf src/__pycache__
 	rm -rf .mypy_cache
 
 lint:

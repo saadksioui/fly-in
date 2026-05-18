@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 import pygame
 
 
@@ -8,19 +8,18 @@ class Visualization:
         self.logs = logs
         self.width = 1920
         self.height = 1080
-
-        self.hubs = {}
-        self.connections = {}
-        self.drones = {}
+        self.hubs: Dict[str, Any] = {}
+        self.connections: Dict[str, Any] = {}
+        self.drones: Dict[str, str] = {}
         self.turns = 0
 
-        self.x_zones = []
-        self.y_zones = []
-        self.scale = 0
-        self.off_x = 0
-        self.off_y = 0
+        self.x_zones: List[float] = []
+        self.y_zones: List[float] = []
+        self.scale: float = 0.0
+        self.off_x: float = 0.0
+        self.off_y: float = 0.0
 
-    def _setup(self):
+    def _setup(self) -> None:
         self.hubs = {h["name"]: h for h in self.data["hubs"]}
         self.connections = {c["name"]: c for c in self.data["connections"]}
         self.drones = {f"D{i}": self.data['hubs'][0]['name']
@@ -34,7 +33,7 @@ class Visualization:
         self.off_x = 100 - min(self.x_zones) * self.scale
         self.off_y = 100 - min(self.y_zones) * self.scale
 
-    def _get_pos(self, name):
+    def _get_pos(self, name: str) -> Tuple[int, int]:
         if name in self.hubs.keys():
             if self.hubs[name]['x'] >= self.width:
                 raise ValueError(f"Line {self.hubs[name]['line_no']}: "
@@ -51,7 +50,7 @@ class Visualization:
         return (int(x * self.scale + self.off_x),
                 int(y * self.scale + self.off_y))
 
-    def _get_color(self, color_name):
+    def _get_color(self, color_name: Optional[str]) -> Any:
         if color_name is None or color_name.lower() == "none":
             return (200, 200, 200)
         try:
@@ -59,7 +58,7 @@ class Visualization:
         except ValueError:
             return (200, 200, 200)
 
-    def run(self):
+    def run(self) -> None:
         self._setup()
         running = True
         pygame.init()

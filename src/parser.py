@@ -228,38 +228,38 @@ class Parser:
 
     def _validate(self,
                   records: List[Dict[str, Any]]) -> Dict[str, Any]:
+        result: Dict[str, Any] = {"nb_drones": 0, "hubs": [],
+                                  "connections": []}
         seen_names = set()
         for rec in records:
-            if rec["type"] == "zone":
+            if rec["type"] == "nb_drones":
+                result["nb_drones"] = rec["value"]
+            elif rec["type"] == "zone":
                 name = rec["name"]
                 if name in seen_names:
                     raise HubException(
                         f"Line {rec['line_no']}: Duplicate zone name '{name}'"
                     )
                 seen_names.add(name)
-
-        zone_names = {rec["name"] for rec in records if rec["type"] == "zone"}
-        for rec in records:
-            if rec["type"] == "connection":
-                if rec["from"] not in zone_names:
+                result["hubs"].append(rec)
+            elif rec["type"] == "connection":
+                if rec["from"] not in seen_names:
                     raise ConnectionException(
-                        f"Line {rec['line_no']}: Unknown zone "
-                        f"'{rec['from']}' in connection"
+                        f"Line {rec['line_no']}: Unknown "
+                        f"zone '{rec['from']}' in connection"
                     )
-                if rec["to"] not in zone_names:
+                if rec["to"] not in seen_names:
                     raise ConnectionException(
-                        f"Line {rec['line_no']}: Unknown zone "
-                        f"'{rec['to']}' in connection"
+                        f"Line {rec['line_no']}: Unknown "
+                        f"zone '{rec['to']}' in connection"
                     )
-
-        seen_edges = set()
-        for rec in records:
-            if rec["type"] == "connection":
                 if rec["from"] == rec["to"]:
                     raise ConnectionException(
-                        f"Line {rec['line_no']}: Self-loop connections "
+                        f"Line {rec['line_no']}: Loop connections "
                         "are not allowed"
                     )
+
+                seen_edges = set()
                 edge = tuple(sorted((rec["from"], rec["to"])))
                 if edge in seen_edges:
                     raise ConnectionException(
@@ -267,16 +267,8 @@ class Parser:
                         f"'{rec['from']}-{rec['to']}'"
                     )
                 seen_edges.add(edge)
-
-        result: Dict[str, Any] = {"nb_drones": 0, "hubs": [],
-                                  "connections": []}
-        for rec in records:
-            if rec["type"] == "nb_drones":
-                result["nb_drones"] = rec["value"]
-            elif rec["type"] == "zone":
-                result["hubs"].append(rec)
-            elif rec["type"] == "connection":
                 result["connections"].append(rec)
+
         return result
 
     def parser(self) -> Dict[str, Any]:
