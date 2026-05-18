@@ -231,6 +231,7 @@ class Parser:
         result: Dict[str, Any] = {"nb_drones": 0, "hubs": [],
                                   "connections": []}
         seen_names = set()
+        seen_edges = set()
         for rec in records:
             if rec["type"] == "nb_drones":
                 result["nb_drones"] = rec["value"]
@@ -259,7 +260,6 @@ class Parser:
                         "are not allowed"
                     )
 
-                seen_edges = set()
                 edge = tuple(sorted((rec["from"], rec["to"])))
                 if edge in seen_edges:
                     raise ConnectionException(
