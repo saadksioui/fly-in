@@ -52,11 +52,11 @@ class Graph:
     elements: Dict[Zone,
                    List[tuple[Zone, Connection]]] = field(default_factory=dict)
 
-    def add_zone(self, zone: Zone):
+    def add_zone(self, zone: Zone) -> None:
         if zone not in self.elements:
             self.elements[zone] = []
 
-    def add_connection(self, connection: Connection):
+    def add_connection(self, connection: Connection) -> None:
         self.add_zone(connection.zone_a)
         self.add_zone(connection.zone_b)
         self.elements[connection.zone_a].append(

@@ -6,7 +6,7 @@ from src.custom_exception import (
 from src.parser import Parser
 from src.data import Zone, Metadata, Connection, Graph, Drone
 from src.simulation import Simulation
-from src.ol import Visualizer
+from src.visual import Visualization
 import sys
 
 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         sim = Simulation(graph, drones, parsed_data["nb_drones"], loc_drones)
         sim.calculate_routes(start_hub)
         sim.run_simulation()
-        vi = Visualizer(graph, sim.logs, sim.total_drones)
+        vi = Visualization(parsed_data, sim.logs)
         vi.run()
 
     except FileNotFoundError as e:

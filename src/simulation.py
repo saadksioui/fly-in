@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 from src.data import Graph, Drone, Zone
 import heapq
 
@@ -12,14 +12,14 @@ class Simulation:
         self.turns = 0
         self.drones_delivered = 0
         self.total_drones = nbr_drones
-        self.logs = []
+        self.logs: List[str] = []
         self.type_zone = {
                 "normal": 1.0,
                 "restricted": 2.0,
                 "priority": 0.9,
                 }
 
-    def _get_path(self, previous: Dict[str, Any]):
+    def _get_path(self, previous: Dict[str, Any]) -> List[Zone]:
         end = self.graph.end_hub
         path = []
         while end is not None:
@@ -28,13 +28,14 @@ class Simulation:
         path.reverse()
         return path
 
-    def find_path(self, start: Zone, penalties: Dict[str, float]):
+    def find_path(self, start: Zone,
+                  penalties: Dict[str, float]) -> List[Zone]:
         distances = {v.name: float('inf') for v in self.graph.elements.keys()}
         previous = {v.name: None for v in self.graph.elements.keys()}
         visited = {v.name: False for v in self.graph.elements.keys()}
         first_zone = start
         distances[first_zone.name] = 0
-        hq = []
+        hq: List[Tuple[int, str, Zone]] = []
         heapq.heappush(hq, (distances[first_zone.name],
                             first_zone.name, first_zone))
         while hq:
@@ -53,7 +54,7 @@ class Simulation:
             raise ValueError("No valid route from start_hub to end_hub")
         return self._get_path(previous)
 
-    def calculate_routes(self, start: Zone):
+    def calculate_routes(self, start: Zone) -> None:
         penalties = {zone.name: 0.0 for zone in self.graph.elements.keys()}
         for i, drone in enumerate(self.drones):
             path = self.find_path(start, penalties)
@@ -66,13 +67,13 @@ class Simulation:
                 for zone_name in penalties:
                     penalties[zone_name] = max(0.0, penalties[zone_name] - 0.4)
 
-    def _get_connection(self, old: Zone, new: Zone):
+    def _get_connection(self, old: Zone, new: Zone) -> Optional[Any]:
         for zone, conn in self.graph.elements.get(old, []):
             if zone == new:
                 return conn
         return None
 
-    def run_simulation(self):
+    def run_simulation(self) -> None:
         half_move = []
         while self.drones_delivered < self.total_drones:
             for drone in self.drones:
@@ -114,8 +115,10 @@ class Simulation:
                 if used >= connection.metadata:
                     self.loc_drones[old.name].append(drone)
                     continue
-                going = sum(1 for nd, nc, nn in half_move if nn.name == next.name)
-                if (len(self.loc_drones[next.name]) + going == next.metadata.max_drones
+                going = sum(1 for nd, nc, nn in half_move
+                            if nn.name == next.name)
+                if (len(self.loc_drones[next.name])
+                    + going == next.metadata.max_drones
                         and next.prefix != "end_hub"):
                     self.loc_drones[old.name].append(drone)
                     continue

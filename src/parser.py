@@ -129,7 +129,7 @@ class Parser:
                      "y": y, "metadata": metadata, "line_no": line_no})
         return data
 
-    def _get_connection(self, line: str, line_no: int):
+    def _get_connection(self, line: str, line_no: int) -> Dict[str, Any]:
         data = {}
         metadata = {"max_link_capacity": 1}
         prefix, content = line.split(':', 1)
@@ -180,7 +180,7 @@ class Parser:
 
         return data
 
-    def _gettypes(self, lines: List[Tuple[int, str]]):
+    def _gettypes(self, lines: List[Tuple[int, str]]) -> List[Dict[str, Any]]:
         found_nbr = False
         found_start = False
         found_end = False
@@ -226,7 +226,8 @@ class Parser:
             raise ParsingException("The map must contain 'nb_drones'")
         return record
 
-    def _validate(self, records: List[Dict[str, Any]]):
+    def _validate(self,
+                  records: List[Dict[str, Any]]) -> Dict[str, Any]:
         seen_names = set()
         for rec in records:
             if rec["type"] == "zone":
@@ -267,7 +268,8 @@ class Parser:
                     )
                 seen_edges.add(edge)
 
-        result = {"nb_drones": 0, "hubs": [], "connections": []}
+        result: Dict[str, Any] = {"nb_drones": 0, "hubs": [],
+                                  "connections": []}
         for rec in records:
             if rec["type"] == "nb_drones":
                 result["nb_drones"] = rec["value"]
@@ -277,7 +279,7 @@ class Parser:
                 result["connections"].append(rec)
         return result
 
-    def parser(self):
+    def parser(self) -> Dict[str, Any]:
         with open(self.path, 'r') as f:
             data = f.read()
         lines = self._getlines(data)
